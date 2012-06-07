@@ -288,6 +288,8 @@ class core_renderer extends renderer_base {
         $output = '';
         $output .= '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />' . "\n";
         $output .= '<meta name="keywords" content="moodle, ' . $this->page->title . '" />' . "\n";
+        // nkowald - 2012-05-21 - Force stupid IE into IE9 mode
+        $output .= '<meta http-equiv="X-UA-Compatible" content="IE=100" />' . "\n";
         if (!$this->page->cacheable) {
             $output .= '<meta http-equiv="pragma" content="no-cache" />' . "\n";
             $output .= '<meta http-equiv="expires" content="0" />' . "\n";
