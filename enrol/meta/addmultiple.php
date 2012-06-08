@@ -45,18 +45,18 @@ $enrol = enrol_get_plugin('meta');
 $rowlimit = $enrol->get_config('addmultiple_rowlimit', 0);
 
 function get_valid_courses($courses) {
-    $available_courses = array();
+    $valid_courses = array();
     foreach ($courses as $c) {
-        if ($c->id == SITEID or $c->id == $course->id or isset($existing[$c->id])) {
+        if (isset($existing[$c->id]) || $c->id == $course->id || $c->id == SITEID) {
             continue;
         }
         $coursecontext = get_context_instance(CONTEXT_COURSE, $c->id);
         if (!has_capability('enrol/meta:selectaslinked', $coursecontext)) {
             continue;
         }
-        $available_courses[$c->id] = format_string($c->fullname) . ' ['.$c->shortname.']';
+        $valid_courses[$c->id] = format_string($c->fullname) . ' ['.$c->shortname.']';
     }
-    return $available_courses;
+    return $valid_courses;
 }
 
 $existing = $DB->get_records('enrol', array('enrol'=>'meta', 'courseid'=>$course->id), '', 'customint1, id');
