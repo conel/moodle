@@ -46,4 +46,11 @@ $THEME->sheets = array(
     'css3',      /** Sets up CSS 3 + browser specific styles **/
     'conel'
 );
+$THEME->layouts = array(
+    'frontpage' => array(
+        'file' => 'frontpage.php',
+        'regions' => array('side-pre', 'side-post'),
+        'defaultregion' => 'side-post',
+    )
+);
 $THEME->enable_dock = true;
