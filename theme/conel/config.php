@@ -44,7 +44,8 @@ $THEME->sheets = array(
     'modules',
     'question',
     'css3',      /** Sets up CSS 3 + browser specific styles **/
-    'conel'
+    'conel',
+    'get-help'
 );
 $THEME->layouts = array(
     'frontpage' => array(

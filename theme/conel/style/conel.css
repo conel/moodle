@@ -13,6 +13,23 @@ a:hover {
 .pagelayout-frontpage #page-header {
   border-bottom: 1px solid #dc841a;
 }
+.pagelayout-frontpage #page-content #region-main h2 {
+  color: #464646;
+  border-bottom: 1px solid #DDE0E3;
+  padding-bottom: 3px;
+}
+.pagelayout-frontpage #header_holder {
+  padding: 6px 0 0 6px;
+}
+.pagelayout-frontpage #header-home {
+  background: transparent url([[pix:theme|ezone_logo]]) no-repeat center right;
+}
+.pagelayout-frontpage h1.headermain {
+  display: none;
+}
+.pagelayout-frontpage .headermenu {
+  margin: 0;
+}
 ul.topics li.section {
   margin-bottom: 10px !important;
   background-color: #f5f5f5;
@@ -74,6 +91,9 @@ input[type="submit"] {
 .headermenu {
   font-size: 1em;
 }
+.navbar {
+  background-color: #fff;
+}
 /* Blocks */
 .block {
   border: none;
@@ -134,12 +154,14 @@ select#id_link,
 select#id_links {
   width: 100%;
 }
-#header-home {
-  padding-top: 3px;
+#page-admin-course-index table.editcourse select {
+  width: 100%;
 }
-#page-site-index h1.headermain {
-  display: none;
+#quick_ref_block {
+  font-size: 0.9em;
+  color: #464646;
+  line-height: 1.6em;
 }
-#header-home {
-  background: transparent url([[pix:theme|ezone_logo]]) no-repeat center right;
+#quick_ref_block b {
+  color: #000;
 }

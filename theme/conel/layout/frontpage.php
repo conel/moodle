@@ -1,5 +1,4 @@
-<?php
-
+<?php 
 $hassidepre = $PAGE->blocks->region_has_content('side-pre', $OUTPUT);
 $hassidepost = $PAGE->blocks->region_has_content('side-post', $OUTPUT);
 $showsidepre = $hassidepre && !$PAGE->blocks->region_completely_docked('side-pre', $OUTPUT);
@@ -36,12 +35,11 @@ echo $OUTPUT->doctype() ?>
     <div id="page-header" class="clearfix">
         <h1 class="headermain"><?php echo $PAGE->heading ?></h1>
 		<div id="header-home" class="clearfix">
-            <?php 
-                $banner_img = $OUTPUT->pix_url('banners/banner'. rand(1,4), 'theme'); 
-            ?>
-                <div id="header_holder"><a href="/"><img src="<?php echo $banner_img; ?>" alt="E-Zone" width="350" height="80" /></a></div>
+            <?php $banner_img = $OUTPUT->pix_url('banners/banner'. rand(1,4), 'theme'); ?>
+            <div id="header_holder">
+                <a href="/"><img src="<?php echo $banner_img; ?>" alt="E-Zone" width="350" height="80" /></a>
+            </div>
         </div>
-
         <div class="headermenu"><?php
             echo $OUTPUT->login_info();
             echo $OUTPUT->lang_menu();
@@ -60,6 +58,29 @@ echo $OUTPUT->doctype() ?>
                 <div id="region-main-wrap">
                     <div id="region-main">
                         <div class="region-content">
+
+                        <h2>News</h2>
+                        <p>Banners here</p>
+                        <br />
+
+                        <h2>Get Help</h2>
+                        <ul id="get_help">
+                            <li class="gh1"><a href="">Anti-bullying</a></li>
+                            <li class="gh2"><a href="">Careers</a></li>
+                            <li class="gh3"><a href="">E-Learning<br />&amp; ICT Support</a></li>
+                            <li class="gh4"><a href="">E-safety</a></li>
+                            <li class="gh5"><a href="">Learner Guidance<br />&amp; Policies</a></li>
+                            <li class="gh6"><a href="">Learner Support</a></li>
+                            <li class="gh7"><a href="">Mentoring</a></li>
+                            <li class="gh8"><a href="">Recruit Direct</a></li>
+                            <li class="gh9"><a href="">Safeguarding</a></li>
+                            <li class="gh10"><a href="" target="_blank">Student Help Reporting System</a></li>
+                            <li class="gh11"><a href="">Student Success Stories</a></li>
+                            <li class="gh12"><a href="">Welfare</a></li>
+                        </ul>
+                        <br class="clear_both" />
+
+
                             <?php echo $OUTPUT->main_content() ?>
                         </div>
                     </div>

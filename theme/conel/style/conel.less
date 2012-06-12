@@ -23,8 +23,31 @@ a {
 a:hover {
   color: #009edb;
 }
-.pagelayout-frontpage #page-header {
-    border-bottom:1px solid @moodle_orange;
+.pagelayout-frontpage {
+    #page-header {
+        border-bottom:1px solid @moodle_orange;
+    }
+    #page-content {
+        #region-main {
+            h2 {
+                color:@god_font;
+                border-bottom:1px solid #DDE0E3;
+                padding-bottom:3px;
+            }
+        }
+    }
+    #header_holder {
+        padding:6px 0 0 6px;
+    }
+    #header-home {
+        background: ~"transparent url([[pix:theme|ezone_logo]]) no-repeat center right";
+    }
+    h1.headermain {
+        display:none;
+    }
+    .headermenu {
+        margin:0;
+    }
 }
 ul {
     &.topics {
@@ -97,6 +120,9 @@ input[type="submit"] {
 .headermenu {
     font-size:1em;
 }
+.navbar {
+    background-color:#fff;
+}
 
 /* Blocks */
 .block {
@@ -168,12 +194,17 @@ select#movetoid {
 select#id_link, select#id_links {
     width:100%;
 }
-#header-home {
-    padding-top:3px;
+#page-admin-course-index {
+    table.editcourse select {
+        width:100%;
+    }
 }
-#page-site-index h1.headermain {
-    display:none;
-}
-#header-home {
-    background: ~"transparent url([[pix:theme|ezone_logo]]) no-repeat center right";
+#quick_ref_block {
+    font-size: 0.9em;
+    color:@god_font;
+    line-height:1.6em;
+    
+    b {
+        color:#000;
+    }
 }
