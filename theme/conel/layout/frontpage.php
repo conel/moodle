@@ -1,4 +1,9 @@
 <?php 
+
+//include($_SERVER['DOCUMENT_ROOT'] . '\theme\conel\banners\Banners.class.php');
+//$banners = new Banners(); 
+//$banners_exist = $banners->bannersExist();
+
 $hassidepre = $PAGE->blocks->region_has_content('side-pre', $OUTPUT);
 $hassidepost = $PAGE->blocks->region_has_content('side-post', $OUTPUT);
 $showsidepre = $hassidepre && !$PAGE->blocks->region_completely_docked('side-pre', $OUTPUT);
@@ -25,6 +30,13 @@ echo $OUTPUT->doctype() ?>
     <title><?php echo $PAGE->title ?></title>
     <link rel="shortcut icon" href="<?php echo $OUTPUT->pix_url('favicon', 'theme')?>" />
     <meta name="description" content="<?php p(strip_tags(format_text($SITE->summary, FORMAT_HTML))) ?>" />
+    <!-- Banners -->
+    <link rel="stylesheet" type="text/css" href="/lib/jquery/rotator/wt-rotator.css"/>
+    <script type="text/javascript" src="/lib/jquery/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="/lib/jquery/jquery.easing.1.3.min.js"></script>
+    <script type="text/javascript" src="/lib/jquery/rotator/js/jquery.wt-rotator.min.js"></script>
+    <script type="text/javascript" src="/theme/conel/banners/js/config.js"></script>
+    <!-- //Banners -->
     <?php echo $OUTPUT->standard_head_html() ?>
 </head>
 <body id="<?php p($PAGE->bodyid) ?>" class="<?php p($PAGE->bodyclasses.' '.join(' ', $bodyclasses)) ?>">
@@ -60,8 +72,42 @@ echo $OUTPUT->doctype() ?>
                         <div class="region-content">
 
                         <h2>News</h2>
-                        <p>Banners here</p>
-                        <br />
+                        <?php 
+                        //if ($banners_exist === true) { 
+                            //$banners_found = $banners->getBanners();
+                        ?>
+                        <div class="container">
+                            <div class="wt-rotator">
+                            <div class="screen"><noscript><img src="<?php // first banner ?>" alt="" /></noscript></div>
+                            <div class="c-panel">
+                                <div class="buttons">
+                                    <div class="prev-btn"></div>
+                                    <div class="play-btn"></div>    
+                                    <div class="next-btn"></div>               
+                                </div>
+                                <div class="thumbnails">
+                                    <ul>
+                                        <li><a href="http://moodle2/theme/conel/banners/student/banner1.png" title=""><img src="http://moodle2/theme/conel/banners/student/banner1.png" alt="" /></a></li>
+                                        <li><a href="http://moodle2/theme/conel/banners/student/banner2.png" title=""><img src="http://moodle2/theme/conel/banners/student/banner2.png" alt="" /></a></li>
+                                    </ul>
+                                </div>     
+
+                              </div><!-- // c-panel -->
+                            </div><!-- // wt-rotator -->
+                        </div><!-- // container -->
+                        
+                        <?php 
+                        //} else {
+                            //echo '<p>No banners have been added.</p>';
+                        //}
+                        /*
+                        if (isadmin()) {
+                            echo '<p style="text-align:right;"><a href="'.$CFG->wwwroot.'/banners/index.php?role=1">Edit Banners</a></p>';
+                         */
+                        //}
+            
+                        ?>
+
 
                         <h2>Get Help</h2>
                         <ul id="get_help">
