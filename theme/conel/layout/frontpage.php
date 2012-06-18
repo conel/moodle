@@ -1,8 +1,11 @@
 <?php 
 
-//include($_SERVER['DOCUMENT_ROOT'] . '\theme\conel\banners\Banners.class.php');
-//$banners = new Banners(); 
-//$banners_exist = $banners->bannersExist();
+include($_SERVER['DOCUMENT_ROOT'] . '\theme\conel\banners\Banners.class.php');
+$audience = 1; // staff
+$banners = new Banners($audience); 
+$banners_exist = $banners->bannersExist();
+$banners_found = $banners->getBanners();
+$audience_name = ucfirst($banners->getAudiencePath($audience));
 
 $hassidepre = $PAGE->blocks->region_has_content('side-pre', $OUTPUT);
 $hassidepost = $PAGE->blocks->region_has_content('side-post', $OUTPUT);
@@ -72,42 +75,31 @@ echo $OUTPUT->doctype() ?>
                         <div class="region-content">
 
                         <h2>News</h2>
-                        <?php 
-                        //if ($banners_exist === true) { 
-                            //$banners_found = $banners->getBanners();
-                        ?>
+                        <?php if ($banners_exist === true) { ?>
                         <div class="container">
                             <div class="wt-rotator">
-                            <div class="screen"><noscript><img src="<?php // first banner ?>" alt="" /></noscript></div>
+                            <div class="screen"><noscript><img src="<?php echo $banners_found[0]['img_url']; ?>" alt="" /></noscript></div>
                             <div class="c-panel">
-                                <div class="buttons">
-                                    <div class="prev-btn"></div>
-                                    <div class="play-btn"></div>    
-                                    <div class="next-btn"></div>               
-                                </div>
+                                <div class="buttons"><div class="prev-btn"></div><div class="play-btn"></div><div class="next-btn"></div></div>
                                 <div class="thumbnails">
                                     <ul>
-                                        <li><a href="http://moodle2/theme/conel/banners/student/banner1.png" title=""><img src="http://moodle2/theme/conel/banners/student/banner1.png" alt="" /></a></li>
-                                        <li><a href="http://moodle2/theme/conel/banners/student/banner2.png" title=""><img src="http://moodle2/theme/conel/banners/student/banner2.png" alt="" /></a></li>
+                                        <?php foreach ($banners_found as $ban) {
+                                            echo '<li><a href="'.$ban['img_url'].'"><img src="'.$ban['img_url'].'" alt="Banner" width="495" height="185" /></a><a href="'.$ban['link'].'"></a></li>' . PHP_EOL;
+                                        } ?>
                                     </ul>
                                 </div>     
-
                               </div><!-- // c-panel -->
                             </div><!-- // wt-rotator -->
                         </div><!-- // container -->
                         
                         <?php 
-                        //} else {
-                            //echo '<p>No banners have been added.</p>';
-                        //}
-                        /*
-                        if (isadmin()) {
-                            echo '<p style="text-align:right;"><a href="'.$CFG->wwwroot.'/banners/index.php?role=1">Edit Banners</a></p>';
-                         */
-                        //}
-            
+                        } else {
+                            echo '<p>No banners have been added yet.</p>';
+                        }
+                        if (has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))) {
+                            echo '<p style="text-align:right;"><a href="/theme/conel/banners/index.php?role=1">Edit '.$audience_name.' Banners</a></p>';
+                        }
                         ?>
-
 
                         <h2>Get Help</h2>
                         <ul id="get_help">
@@ -125,7 +117,6 @@ echo $OUTPUT->doctype() ?>
                             <li class="gh12"><a href="">Welfare</a></li>
                         </ul>
                         <br class="clear_both" />
-
 
                             <?php echo $OUTPUT->main_content() ?>
                         </div>

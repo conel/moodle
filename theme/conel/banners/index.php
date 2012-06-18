@@ -21,25 +21,25 @@ $PAGE->requires->js('/lib/jquery/jquery-1.7.2.min.js', true);
 
 // body
 echo $OUTPUT->header();
+$banners = new Banners($audience);
+$other_link = $banners->getOtherLink();
 ?>
 
 <div id="holder">
 	<a href="#" class="add_banner"><span class="add">Add Banner</span></a>
     <p><strong>Banner size:</strong> 495 x 185 pixels<br />
 <?php
-    $banners = new Banners($audience);
     $all_banners = $banners->getBanners();
     $audience_path = $banners->getAudiencePath($audience);
 
 	if (count($all_banners) == 0) {
-		echo '<p>No '.$audience_path.' banners exist.</p>';
+		echo '<p>No '.$audience_path.' banners have been added yet.</p>';
 	}
 ?>
 <div id="banners_holder">
 <?php
 	if (is_array($all_banners) && count($all_banners) > 0) {
 		$c = 1;
-        $banner_path = $CFG->wwwroot . '/theme/conel/banners/' . $audience_path . '/';
 
 		foreach ($all_banners as $banner) {
 			
@@ -63,7 +63,7 @@ echo $OUTPUT->header();
 			echo '</div>
 			</div>
 				<div class="banner_details">
-					<img src="'.$banner_path . $banner['img_url'].'" height="155" width="425" alt="" /><br />
+					<img src="'.$banner['img_url'].'" height="155" width="425" alt="" /><br />
 					<div class="actions">
 						<a href="banner_edit.php?id='.$id.'&amp;audience='.$audience.'" class="edit"><span class="'.$c.'">Edit</span></a>
 						<a href="banner_actions.php?action=delete&amp;id='.$id.'&amp;audience='.$audience.'" class="delete"><span class="'.$c.'">Delete</span></a>
@@ -124,6 +124,7 @@ echo $OUTPUT->header();
 </div>
 <!-- //add banner -->
 
+<p><strong><?php echo $other_link; ?></strong></p>
 </div>
 <script type="text/javascript" src="/lib/jquery/colorbox/jquery.colorbox-min.js"></script>
 <script type="text/javascript" src="/theme/conel/banners/js/banners-admin.js"></script>

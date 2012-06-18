@@ -20,9 +20,16 @@ class Banners {
         $this->valid_exts = array('jpg', 'jpeg', 'png', 'gif');
     }
 
-    public function getAudiencePath($audience='') {
-        $path = ($this->audience == 1) ? 'staff' : 'student';
+    public function getAudiencePath($audience=1) {
+        $path = ($audience == 1) ? 'staff' : 'student';
         return $path;
+    }
+
+    private function getHTTPPath() {
+        global $CFG;
+        $audience_path = $this->getAudiencePath($this->audience);
+        $http_path = $CFG->wwwroot . '/theme/conel/banners/' . $audience_path . '/';
+        return $http_path;
     }
 
     private function getBannerFolder() {
@@ -31,24 +38,29 @@ class Banners {
         return $path['dirname'] . '\\' . $path['basename'] . '\\' . $audience_name . '\\' ;
     }
 
+    // TODO - if table not found: set it up
     private function createBannersTable() {
         /*
-        CREATE TABLE mdl_conel_banners (
+        global $CFG;
+        $query = "sprintf("CREATE TABLE %s (
             id INT NOT NULL AUTO_INCREMENT,
             PRIMARY KEY(id),
             position SMALLINT(3) unsigned NOT NULL,
-            link VARCHAR(170) NOT NULL,
+            link VARCHAR(170),
             img_url VARCHAR(150) NOT NULL,
             active TINYINT(1) unsigned NOT NULL,
-            audience SMALLINT(3) unsigned NOT NULL,
+            audience SMALLINT(2) unsigned NOT NULL,
             date_created BIGINT(15) unsigned,
             date_modified BIGINT(15) unsigned
+        )", 
+            $CFG->prefix . $this->banners_table 
         );
         */
     } 
 
     public function bannersExist() {
-        return true;
+        global $DB;
+        return $DB->record_exists($this->banners_table, array('audience'=>$this->audience));
     }
 
     public function getBanners() {
@@ -58,16 +70,17 @@ class Banners {
         $banners = array();
         $active_banners = 0;
         $fpbanners = $DB->get_records($this->banners_table, array('audience'=>$this->audience), 'position ASC', '*');
+        $http_path = $this->getHTTPPath();
         $c = 0;
         foreach($fpbanners as $ban) {
             $banners[$c]['id'] = $ban->id;
             $banners[$c]['position'] = $ban->position;
             $banners[$c]['link'] = $ban->link;
-            $banners[$c]['img_url']	= $ban->img_url;
+            $banners[$c]['img_url']	= $http_path . $ban->img_url;
             $banners[$c]['active'] = $ban->active;
             $position = $ban->position;
-            $c++;
             if ($ban->active) $active_banners++;
+            $c++;
         }
         return $banners;
     }
@@ -92,7 +105,7 @@ class Banners {
         return true;
     }
 
-    public function move($current_pos='', $new_pos='') {
+    private function move($current_pos='', $new_pos='') {
         global $DB;
         global $CFG;
 
@@ -133,24 +146,26 @@ class Banners {
         return true;
     }
 
-    public function upload(Array $files) {
+    private function cleanFilename($filename) {
+        return str_replace(' ', '-', $filename);
+    }
 
-        global $DB;
+    private function uploadFile(Array $files) {
+
+        // Work out if new banner img or updating banner img
+        $name = (isset($files['banner_img'])) ? 'banner_img' : 'new_banner_img';
 
         // Check we have a file
-        if($files['banner_img']['error'] != 0) {
+        if($files[$name]['error'] != 0) {
             $this->errors[] = "No file uploaded";
             return false;
         }
 
         // Check file is JPEG or GIF and its size is less than 500Kb
-        $filename = basename($files['banner_img']['name']);
+        $filename = $this->cleanFilename(basename($files[$name]['name']));
         $ext = substr($filename, strrpos($filename, '.') + 1);
 
-        if ((!in_array($ext, $this->valid_exts)) 
-            || (!in_array($files["banner_img"]["type"], $this->valid_mimes)) 
-            || ($files["banner_img"]["size"] > 500000)) 
-        {
+        if ((!in_array($ext, $this->valid_exts)) || (!in_array($files[$name]["type"], $this->valid_mimes)) || ($files[$name]["size"] > 500000)) {
             $this->errors[] =  "Only .jpg, .jpeg, .png, .gif images under 500Kb are accepted for upload";
             return false;
         }
@@ -159,15 +174,27 @@ class Banners {
         $newname = $this->banner_path . $filename;
 
         // Check if the file with the same name is already exists on the server
-        if (file_exists($newname)) {
-            $this->errors[] = "File ".$files["banner_img"]["name"]." already exists";
-            return false;
+        $original_name = substr($filename, 0, (strpos($filename, $ext) - 1));
+        $i = 1;
+        while(file_exists($newname)) {
+            $filename = $original_name . '_' . $i . '.' . $ext;
+            $newname = $this->banner_path . $filename;
+            $i++;
         }
         // Attempt to move the uploaded file to it's new place
-        if (!move_uploaded_file($files['banner_img']['tmp_name'], $newname)) {
+        if (!move_uploaded_file($files[$name]['tmp_name'], $newname)) {
            $this->errors[] = "A problem occurred during file upload!";
            return false;
         }
+
+        return $filename;
+    }
+
+    public function upload(Array $files) {
+
+        global $DB;
+
+        $filename = $this->uploadFile($files);
 
         // Banner successfully updated!
             
@@ -183,7 +210,7 @@ class Banners {
         if (is_numeric($_POST['position'])) {
             $position = $_POST['position'];
         } else {
-            $this->errors[] = "Position must be numeric";
+            $this->errors[] = "Position must be a number";
             return false;
         }
 
@@ -254,7 +281,7 @@ class Banners {
         } else {
             // Delete the file from banners directory - to save space and prevent 'duplicate' image errors
             $filepath = $this->banner_path . $img_url;
-            //Check if the file with the same name is already exists on the server
+            //Check if the file exists on the server: if so DELETE it.
             if (file_exists($filepath) && unlink($filepath)) {
                 // Update order of banners
                 if ($this->updateOrder() === false) {
@@ -360,35 +387,17 @@ class Banners {
                 $this->errors[] = 'Banner not found';
                 return false;
             }
-            $newname = $old_banner->img_url;
+            $oldname = $old_banner->img_url;
             // Now we have image url: delete it!
-            $filepath = $this->banner_path . $newname;
+            $filepath = $this->banner_path . $oldname;
             // Check that a file with the same name doesn't already exist on the server
             if (file_exists($filepath) && !unlink($filepath)) {
-                $this->errors[] = "Problem deleting ".$files["new_banner_img"]["name"];
+                $this->errors[] = "Problem deleting $filename";
                 return false;
             }
             // Deleted successfully, upload new banner
-            $filename = basename($files['new_banner_img']['name']);
-            $ext = substr($filename, strrpos($filename, '.') + 1);
+            $filename = $this->uploadFile($files);
 
-            // Check that the file is a JPEG or GIF and its size is less than 500Kb
-            if ((!in_array($ext, $this->valid_exts)) || (!in_array($files["new_banner_img"]["type"], $this->valid_mimes)) || ($files["new_banner_img"]["size"] > 500000)) {
-                $this->errors[] = "Only .jpg, .jpeg, .png, .gif images under 500Kb are accepted for upload";
-                return false;
-            }
-            //Determine the path to which we want to save this file
-            $newname = $this->banner_path . $filename;
-            //Check if the file with the same name is already exists on the server
-            if (file_exists($newname)) {
-              $this->errors[] = 'A banner with this name already exists.';
-              return false;
-            }
-            // Attempt to move the uploaded file to it's new place
-            if ((!move_uploaded_file($files['new_banner_img']['tmp_name'], $newname))) {
-                $this->errors[] = 'Error uploading new banner image';
-                return false;
-            }
             // Now finally, update the database record with new details
             $old_banner->link = $link;
             $old_banner->img_url = $filename;
@@ -402,6 +411,17 @@ class Banners {
                 return false;
             }
         }
+    }
+
+    public function getOtherLink() {
+        if ($this->audience == 1) {
+            $link_name = $this->getAudiencePath(2);
+            $link = '<a href="index.php?audience=2">Change '.ucfirst($link_name).' banners</a>';
+        } else {
+            $link_name = $this->getAudiencePath(1);
+            $link = '<a href="index.php?audience=1">Change '.ucfirst($link_name).' banners</a>';
+        }
+        return $link;
     }
 
     /***********************************
