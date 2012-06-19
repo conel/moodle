@@ -1,30 +1,69 @@
 <?php
+/**
+ * Banner Changer
+ *
+ * Banners used for advertising news to Conel Staff and Students. 
+ * Added to the conel theme for use on the frontpage and 'my moodle'. 
+ *
+ * Uses two jQuery plugins for display and editing: 
+ *     1. http://codecanyon.net/item/jquery-banner-rotator-slideshow/109046 
+ *     2. http://www.jacklmoore.com/colorbox
+ *
+ * @package    theme
+ * @copyright  2012 Nathan Kowald
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 class Banners {
 
+    /** @var string The table name banner details are stored in */
     private $banners_table; 
+    /** @var array Valid mime types */
     private $valid_mimes;
+    /** @var array Valid image extensions */
     private $valid_exts;
-    private $banner_folder;
-    public $errors;
-    public $audience;
-    public $banner_path;
 
+    /** @var array Holds any errors encountered. Displayed during __destruct() */
+    public $errors;
+    /** @var string 1 = Staff, 2 = Student. The two categories of banner. */
+    public $audience;
+    /** @var string The server path to the banner. Used when adding and deleting banners */
+    public $server_path;
+
+
+    /**
+     * Sets the banners table, audience, server_path, valid mime types and valid image extensions
+     *
+     * @param int   $audience Sets audience. Either Staff or Student.
+     */
     public function __construct($audience=1) {
         $this->errors = array();
         $this->banners_table = 'conel_banners';
         if ($audience == 1 || $audience == 2) {
             $this->audience = $audience;
         }
-        $this->banner_path = $this->getBannerFolder();
+        $this->server_path = $this->getServerPath();
         $this->valid_mimes = array('image/jpeg', 'image/png', 'image/gif', 'image/pjpeg');
         $this->valid_exts = array('jpg', 'jpeg', 'png', 'gif');
     }
 
+    /**
+     * Gets the path name of the banners for the given audience type.
+     *
+     * @param int $audience Sets audience type (Staff=1 or Student=2).
+     * @return string $path Returns the path name.
+     */
     public function getAudiencePath($audience=1) {
         $path = ($audience == 1) ? 'staff' : 'student';
         return $path;
     }
 
+    /**
+     * Gets the webpath for the given banner type. Used in image src="".
+     * e.g. http://moodle/theme/conel/banners/staff/
+     *
+     * @return string $http_path Returns the HTTP path (image URL).
+     */
     private function getHTTPPath() {
         global $CFG;
         $audience_path = $this->getAudiencePath($this->audience);
@@ -32,13 +71,20 @@ class Banners {
         return $http_path;
     }
 
-    private function getBannerFolder() {
+    /**
+     * Gets the server path for the given banner type.
+     * e.g. D:\moodle\theme\conel\banners\staff\
+     * This path is used when working with the filesystem. Uploads and deletes.
+     *
+     * @return string Returns the server path
+     */
+    private function getServerPath() {
         $audience_name = $this->getAudiencePath($this->audience);
         $path = pathinfo(getcwd());
         return $path['dirname'] . '\\' . $path['basename'] . '\\' . $audience_name . '\\' ;
     }
 
-    // TODO - if table not found: set it up
+    // TODO - If table not found: create it.
     private function createBannersTable() {
         /*
         global $CFG;
@@ -58,19 +104,27 @@ class Banners {
         */
     } 
 
+    /**
+     * Queries the banners table seeing if any banners have been added for the current audience type.
+     *
+     * @return boolean True or False.
+     */
     public function bannersExist() {
         global $DB;
         return $DB->record_exists($this->banners_table, array('audience'=>$this->audience));
     }
 
+    /**
+     * Gets banner details for the current audience type.
+     * Used on the frontpage and admin page.
+     *
+     * @return array $banners Array of banner details for the current audience type.
+     */
     public function getBanners() {
-
         global $DB;
-
-        $banners = array();
-        $active_banners = 0;
         $fpbanners = $DB->get_records($this->banners_table, array('audience'=>$this->audience), 'position ASC', '*');
         $http_path = $this->getHTTPPath();
+        $banners = array();
         $c = 0;
         foreach($fpbanners as $ban) {
             $banners[$c]['id'] = $ban->id;
@@ -78,20 +132,23 @@ class Banners {
             $banners[$c]['link'] = $ban->link;
             $banners[$c]['img_url']	= $http_path . $ban->img_url;
             $banners[$c]['active'] = $ban->active;
-            $position = $ban->position;
-            if ($ban->active) $active_banners++;
             $c++;
         }
         return $banners;
     }
 
-    // This should be run after every 'delete'.
-    public function updateOrder() {
+    /**
+     * Updates the banner order for the current audience type.
+     * This should be run after every 'upload', 'delete', 'enable', 'disable'.
+     *
+     * @return boolean True if banner order updated successfully. Otherwise false.
+     */
+    private function updateOrder() {
         global $DB;
 
         $results = $DB->get_records($this->banners_table, array('audience'=>$this->audience), 'position ASC', '*'); 
         if (count($results) == 0) {
-            // No banners exist: return true
+            // No banners exist.
             return true;
         }
         $pos = 1;
@@ -105,16 +162,23 @@ class Banners {
         return true;
     }
 
+    /**
+     * Moves a banner up or down based on the given positions.
+     *
+     * @param string $current_pos The current position of the banner.
+     * @param string $new_pos The position the banner will be moved to.
+     * @return boolean True if move successful. Otherwise false.
+     */
     private function move($current_pos='', $new_pos='') {
         global $DB;
         global $CFG;
 
         if ($current_pos == '' && $new_pos == '') {
-            $this->errors[] = 'empty move positions';
+            $this->errors[] = 'Empty move positions';
             return false;
         }
 
-        // get id numbers of banners which need to be swapped
+        // Get id numbers of banners which need to be swapped.
         $order = ($new_pos > $current_pos) ? 'ASC' : 'DESC';
         $query = sprintf(
             "SELECT * FROM %s WHERE position IN (%d, %d) AND audience = %1d ORDER BY position %s",
@@ -146,22 +210,35 @@ class Banners {
         return true;
     }
 
+    /**
+     * Cleans up the name of an image file. 
+     * Best practises suggest spaces be replaced with hyphens.
+     *
+     * @param string $filename The filename of the uploaded image.
+     * @return string Returns a cleaned filename
+     */
     private function cleanFilename($filename) {
         return str_replace(' ', '-', $filename);
     }
 
+    /**
+     * Uploads a banner image to the server.
+     *
+     * @param Array $files $_FILES array comes from the posted form. Required.
+     * @return mixed I know you should only really return one type.
+     *               Returns false if an error occurs OR a cleaned filename if successfully uploaded.
+     */
     private function uploadFile(Array $files) {
-
-        // Work out if new banner img or updating banner img
+        // Work out if new banner img or updating banner image.
         $name = (isset($files['banner_img'])) ? 'banner_img' : 'new_banner_img';
 
-        // Check we have a file
+        // Check we have a file.
         if($files[$name]['error'] != 0) {
             $this->errors[] = "No file uploaded";
             return false;
         }
 
-        // Check file is JPEG or GIF and its size is less than 500Kb
+        // Check file is JPEG or GIF and its size is less than 500Kb.
         $filename = $this->cleanFilename(basename($files[$name]['name']));
         $ext = substr($filename, strrpos($filename, '.') + 1);
 
@@ -170,19 +247,19 @@ class Banners {
             return false;
         }
 
-        // Determine the path to which we want to save this file
-        $newname = $this->banner_path . $filename;
+        // Determine the path to save this file to.
+        $fullpath = $this->server_path . $filename;
 
-        // Check if the file with the same name is already exists on the server
+        // Check if the file with the same name is already exists on the server.
         $original_name = substr($filename, 0, (strpos($filename, $ext) - 1));
         $i = 1;
-        while(file_exists($newname)) {
+        while(file_exists($fullpath)) {
             $filename = $original_name . '_' . $i . '.' . $ext;
-            $newname = $this->banner_path . $filename;
+            $fullpath = $this->server_path . $filename;
             $i++;
         }
-        // Attempt to move the uploaded file to it's new place
-        if (!move_uploaded_file($files[$name]['tmp_name'], $newname)) {
+        // Attempt to move the uploaded file to it's new place.
+        if (!move_uploaded_file($files[$name]['tmp_name'], $fullpath)) {
            $this->errors[] = "A problem occurred during file upload!";
            return false;
         }
@@ -190,15 +267,19 @@ class Banners {
         return $filename;
     }
 
+    /**
+     * Uploads a banner image to the server and saves the details to the banners table.
+     *
+     * @param Array $files $_FILES array comes from the posted form. Required.
+     * @return boolean False if an error occurs. Otherwise True.
+     */
     public function upload(Array $files) {
-
         global $DB;
 
         $filename = $this->uploadFile($files);
-
         // Banner successfully updated!
             
-        // Only validate URL if banner link given
+        // Only validate URL if banner link given.
         if ($_POST['banner_link'] != '') {
             if (filter_var($_POST['banner_link'], FILTER_VALIDATE_URL)) {
                 $banner_link = filter_var($_POST['banner_link'], FILTER_VALIDATE_URL);
@@ -225,9 +306,14 @@ class Banners {
         $DB->insert_record($this->banners_table, $record, false);
         $this->updateOrder();
         return true;
-
     }
 
+    /**
+     * A worker method. Determines banner positions then gets move() to do the moving.
+     *
+     * @param string $banner_pos The current position of the banner you want to move.
+     * @return boolean False if an error occurs. Otherwise True.
+     */
     public function moveUp($banner_pos = '') {
         if ($banner_pos == '' || !is_numeric($banner_pos)) {
             $this->errors[] = 'Invalid or blank banner position given';
@@ -241,6 +327,12 @@ class Banners {
         return true;
     }
 
+    /**
+     * A worker method. Determines banner positions then gets move() to do the moving.
+     *
+     * @param string $banner_pos The current position of the banner you want to move.
+     * @return boolean False if an error occurs. Otherwise True.
+     */
     public function moveDown($banner_pos = '') {
         if ($banner_pos == '' || !is_numeric($banner_pos)) {
             $this->errors[] = 'Invalid or blank banner position given';
@@ -254,6 +346,12 @@ class Banners {
         return true;
     }
 
+    /**
+     * Deletes a banner.
+     *
+     * @param string $id ID of the banner to delete.
+     * @return boolean False if an error occurs. Otherwise True.
+     */
     public function delete($id='') {
         if ($id == '' || !is_numeric($id)) {
             $this->errors[] = 'No banner ID provided';
@@ -262,7 +360,7 @@ class Banners {
 
         global $DB;
 
-        // get image filename and idnumber of banner to delete
+        // Get image filename and idnumber of banner to delete.
         $banner_id = '';
         $img_url = '';
         if ($found = $DB->get_record($this->banners_table, array('id'=>$id), '*')) {
@@ -273,17 +371,17 @@ class Banners {
             return false;
         }
 
-        // Delete the banner from the table
+        // Delete the banner from the table.
         $result = $DB->delete_records($this->banners_table, array('id' => $banner_id));
         if ($result === false) {
             $this->errors[] = "Could not delete banner: $banner_id";
             return false;
         } else {
-            // Delete the file from banners directory - to save space and prevent 'duplicate' image errors
-            $filepath = $this->banner_path . $img_url;
-            //Check if the file exists on the server: if so DELETE it.
+            // Delete the file from banners directory - to save space and prevent 'duplicate' image errors.
+            $filepath = $this->server_path . $img_url;
+            // Check if the file exists on the server: if so DELETE it.
             if (file_exists($filepath) && unlink($filepath)) {
-                // Update order of banners
+                // Update order of banners.
                 if ($this->updateOrder() === false) {
                     $this->errors[] = 'Could not update banner order!';
                     return false;
@@ -293,7 +391,13 @@ class Banners {
         return true;
     }
 
-
+    /**
+     * Disables a banner. Disabled banners aren't shown.
+     * Banner position is moved to the end. In the admin page the disabled banner is greyed out.
+     *
+     * @param string $id ID of the banner to disable.
+     * @return boolean False if an error occurs. Otherwise True.
+     */
     public function disable($id='') {
         if ($id == '' || !is_numeric($id)) {
             $this->errors[] = 'No banner ID provided';
@@ -315,10 +419,16 @@ class Banners {
             $this->errors[] = 'Could not update banner order!';
             return false;
         }
-        // Successfully disabled and re-ordered
+        // Successfully disabled and re-ordered.
         return true;
     }
 
+    /**
+     * Enables a banner.
+     *
+     * @param string $id ID of the banner to enable.
+     * @return boolean False if an error occurs. Otherwise True.
+     */
     public function enable($id='') {
         if ($id == '' || !is_numeric($id)) {
             $this->errors[] = 'No banner ID provided';
@@ -338,7 +448,7 @@ class Banners {
                 $this->errors[] = 'Could not update banner order!';
                 return false;
             }
-            // Successfully disabled and re-ordered
+            // Successfully disabled and re-ordered.
         } else {
             $this->errors[] = "Could not enable banner $id";
             return false;
@@ -346,14 +456,23 @@ class Banners {
         return true;
     }
 
+    /**
+     * Updates an existing banner.
+     * Either updates just link and date_modified or the image too if given.
+     *
+     * @param string $id ID of the banner to update.
+     * @param string $link The updated link.
+     * @param Array $files The $_FILES array. Used if updating the banner image.
+     * @return boolean False if an error occurs. Otherwise True.
+     */
     public function update($id='', $link='', Array $files) {
 
-        // Validate ids
+        // Validate ids.
         if ($id == '' || !is_numeric($id)) {
             $this->errors[] = 'Invalid ID: ' . $id;
             return false;
         }
-        // Validate non-empty links
+        // Validate non-empty links.
         if ($link != '' && !filter_var($link, FILTER_VALIDATE_URL)) {
             $this->errors[] = "Invalid URL: $link";
             return false;
@@ -363,48 +482,47 @@ class Banners {
 
         $new_banner = ((!empty($files["new_banner_img"])) && ($files['new_banner_img']['error'] == 0)) ? $files['new_banner_img'] : '';
 
-        // No new banner was added. Update link only
+        // No new banner was added. Update link only.
         if ($new_banner == '') {
             $banner_found = $DB->get_record($this->banners_table, array('id' => $id));
 
-            // Just update link and date modified
+            // Update link and date modified.
             $banner_found->date_modified = time();
             $banner_found->link = $link;
             $result = $DB->update_record($this->banners_table, $banner_found, false);
 
             if ($result === true) {
-                // Woo hoo! everything works
+                // Woo hoo! everything works.
                 return true;
             } else {
                 $this->errors[] = 'Could not update banner';
                 return false;
             }
         } else {
-            // If updating banner, delete old banner and then upload new banner
-            // delete old banner	
+            // If updating banner, delete old banner and then upload new banner.
             $old_banner = $DB->get_record($this->banners_table, array('id' => $id));
             if ($old_banner === false) {
                 $this->errors[] = 'Banner not found';
                 return false;
             }
             $oldname = $old_banner->img_url;
-            // Now we have image url: delete it!
-            $filepath = $this->banner_path . $oldname;
-            // Check that a file with the same name doesn't already exist on the server
+            // Now we have image url: delete it!.
+            $filepath = $this->server_path . $oldname;
+            // Check that a file with the same name doesn't already exist on the server.
             if (file_exists($filepath) && !unlink($filepath)) {
                 $this->errors[] = "Problem deleting $filename";
                 return false;
             }
-            // Deleted successfully, upload new banner
+            // Deleted successfully, upload new banner.
             $filename = $this->uploadFile($files);
 
-            // Now finally, update the database record with new details
+            // Update the database record with new details.
             $old_banner->link = $link;
             $old_banner->img_url = $filename;
             $old_banner->date_modified = time();
             $result = $DB->update_record($this->banners_table, $old_banner, false);
             if ($result === true) {
-                // Woo hoo! everything works : redirect to home
+                // Woo hoo! everything works : redirect to home.
                 return true;
             } else {
                 $this->errors[] = 'Banner update failed!';
@@ -413,6 +531,12 @@ class Banners {
         }
     }
 
+    /**
+     * Gets the link to the 'other' audience type. If staff, returns a link to student banners etc.
+     * Used on the admin page.
+     *
+     * @return string Link to the 'other' audience type.
+     */
     public function getOtherLink() {
         if ($this->audience == 1) {
             $link_name = $this->getAudiencePath(2);
@@ -424,10 +548,13 @@ class Banners {
         return $link;
     }
 
-    /***********************************
-    *  __destruct
-    *
-    ************************************/
+    /**
+     * If errors have been set by any of the methods, it displays them.
+     * Once displayed it resets the errors array.
+     * __destruct() is called when no other references to Banners exist or during shutdown.
+     *
+     * TODO use Moodle 2's built in error methods for outputting errors.
+     */
     public function __destruct() {
         if (count($this->errors) > 0) {
             echo '<div style="color:red;">';
