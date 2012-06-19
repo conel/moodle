@@ -99,7 +99,7 @@ echo $OUTPUT->doctype() ?>
                             echo '<p>No banners have been added yet.</p>';
                         }
                         if (has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))) {
-                            echo '<p style="text-align:right;"><a href="/theme/conel/banners/index.php?role=1">Edit '.$audience_name.' Banners</a></p>';
+                            echo '<p style="text-align:right;"><a href="/theme/conel/banners/index.php?audience=1">Edit '.$audience_name.' Banners</a></p>';
                         }
                         ?>
 
