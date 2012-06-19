@@ -66,8 +66,7 @@ $other_link = $banners->getOtherLink();
 					<img src="'.$banner['img_url'].'" height="155" width="425" alt="" /><br />
 					<div class="actions">
 						<a href="banner_edit.php?id='.$id.'&amp;audience='.$audience.'" class="edit"><span class="'.$c.'">Edit</span></a>
-						<a href="banner_actions.php?action=delete&amp;id='.$id.'&amp;audience='.$audience.'" class="delete"><span class="'.$c.'">Delete</span></a>
-					';	
+						<a href="banner_actions.php?action=delete&amp;id='.$id.'&amp;audience='.$audience.'" class="delete"><span class="'.$c.'">Delete</span></a>';	
 					if ($active) {
 						echo '<a href="banner_actions.php?action=disable&amp;id='.$id.'&amp;audience='.$audience.'" class="disable"><span class="'.$c.'">Disable</span></a>';
 					} else {
@@ -86,7 +85,7 @@ $other_link = $banners->getOtherLink();
 					<br class="clear_both" />
 				</div>
 			</div>
-			<!-- //banner '.$c.' -->';
+			<!-- // banner '.$c.' -->';
 
 			$c++;
 		}

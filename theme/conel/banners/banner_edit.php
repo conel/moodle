@@ -28,8 +28,6 @@ if ($id != '' || !is_numeric($id)) {
 <head>
 <title>Banners</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<link href="banners.css" rel="stylesheet" type="text/css" media="screen" />
-<script type="text/javascript" src="<?php echo $CFG->wwwroot; ?>/theme/conel/jquery-1.7.min.js"></script>
 </head>
 <body> 
 <div id="holder">
