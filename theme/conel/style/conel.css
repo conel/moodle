@@ -131,6 +131,9 @@ input[type="submit"] {
   margin-top: 5px;
   margin-right: 10px;
 }
+.block .content {
+  background-color: #fff;
+}
 .block_calendar_month a {
   text-decoration: none;
 }
@@ -164,4 +167,37 @@ select#id_links {
 }
 #quick_ref_block b {
   color: #000;
+}
+table#staff_links {
+  margin: 0 auto;
+  width: 495px;
+  border: none;
+  background-color: #fff;
+}
+table#staff_links td {
+  height: 130px;
+  text-align: center;
+  font-size: 1.1em;
+  line-height: 1.25em;
+  padding: 0;
+}
+table#staff_links a {
+  text-decoration: none;
+  color: #616161;
+  display: block;
+  font-weight: bold;
+}
+table#staff_links a:hover {
+  text-decoration: underline;
+  color: #0099FF;
+}
+table#staff_links a img {
+  border: none;
+  margin-bottom: 2px;
+}
+#page-my-staff #page-content #region-main h2,
+#page-my-student #page-content #region-main h2 {
+  color: #464646;
+  border-bottom: 1px solid #DDE0E3;
+  padding-bottom: 3px;
 }

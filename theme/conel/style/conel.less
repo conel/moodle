@@ -162,7 +162,9 @@ input[type="submit"] {
             }
         }
 
-
+    }
+    .content {
+        background-color:#fff;
     }
 
 }
@@ -206,5 +208,46 @@ select#id_link, select#id_links {
     
     b {
         color:#000;
+    }
+}
+table#staff_links {
+    margin:0 auto;
+    width:495px;
+    border:none;
+    background-color:#fff;
+
+    td {
+        height:130px;
+        text-align:center;
+        font-size:1.1em;
+        line-height:1.25em;
+        padding:0;
+    }
+
+    a {
+        text-decoration:none;
+        color:#616161;
+        display:block;
+        font-weight:bold;
+
+        &:hover {
+            text-decoration:underline;
+            color:#0099FF;
+        }
+        img {
+            border:none;
+            margin-bottom:2px;
+        }
+    }
+}
+#page-my-staff, #page-my-student {
+    #page-content {
+        #region-main {
+            h2 {
+                color:@god_font;
+                border-bottom:1px solid #DDE0E3;
+                padding-bottom:3px;
+            }
+        }
     }
 }

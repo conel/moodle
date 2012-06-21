@@ -2,7 +2,7 @@
 
 /* Banners */
 include($_SERVER['DOCUMENT_ROOT'] . '\theme\conel\banners\Banners.class.php');
-$audience = 1; // staff
+$audience = 2; // student
 $banners = new Banners($audience); 
 $banners_exist = $banners->bannersExist();
 $banners_found = $banners->getBanners();
