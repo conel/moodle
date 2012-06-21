@@ -32,13 +32,13 @@ $other_link = $banners->getOtherLink();
     $all_banners = $banners->getBanners();
     $audience_path = $banners->getAudiencePath($audience);
 
-	if (count($all_banners) == 0) {
-		echo '<p>No '.$audience_path.' banners have been added yet.</p>';
-	}
+    if (count($all_banners) == 0) {
+        echo '<p>No '.$audience_path.' banners have been added yet.</p>';
+    }
 ?>
 <div id="banners_holder">
 <?php
-	if (is_array($all_banners) && count($all_banners) > 0) {
+	if (count($all_banners) > 0) {
 		$c = 1;
 
 		foreach ($all_banners as $banner) {
