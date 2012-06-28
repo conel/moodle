@@ -1,0 +1,62 @@
+/* Activity Stats */
+table.day_activity {
+	text-transform:capitalize;
+	border:1px solid #CCC;
+	width:100%;
+}
+table.day_activity td {
+	border:1px solid #CCC;
+}
+table.day_activity h4 {
+	font-size:1.2em;
+}
+#activity h1 {
+	font-size:1.6em;
+	text-transform:capitalize;
+	margin-bottom:10px;
+}
+#activity h2 {
+	font-size:1.45em;
+	color:#000;
+	text-transform:capitalize;
+}
+#activity h3 {
+	font-size:2.2em; 
+	color:#000; 
+	font-weight:bold;
+	float:left;
+}
+#activity h4 {
+	font-size:1.3em; 
+	text-transform:capitalize;
+	margin:0;
+	padding:0;
+	margin-top:10px;
+	margin-bottom:2px;
+	color:#000;
+}
+#activity p {
+	margin-bottom:2px;
+}
+#activity a.view_usage {
+	display:block;
+	margin-left:87px;
+	padding-top:9px;
+	padding-bottom:2px;
+}
+table.day_activity {
+	display:none;
+	width:100%;
+}
+table.activity_stats {
+	margin:0;
+	padding:0;
+}
+table.activity_stats td {
+	border:none;
+}
+div.line {
+	display:block;
+	height:9px;
+	background-color:#464646;
+}
