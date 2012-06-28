@@ -40,6 +40,7 @@
     if ($ts != 0) {
         $timestamp = $ts;
     }
+
     
     echo '<div id="activity">';
     
