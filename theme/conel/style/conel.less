@@ -1,0 +1,253 @@
+/* Colour Variables */
+@bright_blue: #009EDB;
+@standard_border: #ddd;
+@standard_bg:#F5F5F5;
+@god_font: #464646;
+@moodle_orange: #DC841A;
+
+/* Mixins */
+.round-corners (@radius: 4px) {
+    border-radius: @radius;
+    -webkit-border-radius: @radius;
+    -moz-border-radius: @radius;
+    -ms-border-radius:@radius;
+    -o-border-radius:@radius;
+}
+
+html, body#tinymce {
+    background-color:#fff;
+}
+a {
+  color:#444F60;
+}
+a:hover {
+  color: #009edb;
+}
+.pagelayout-frontpage {
+    #page-header {
+        border-bottom:1px solid @moodle_orange;
+    }
+    #page-content {
+        #region-main {
+            h2 {
+                color:@god_font;
+                border-bottom:1px solid #DDE0E3;
+                padding-bottom:3px;
+            }
+        }
+    }
+    #header_holder {
+        padding:6px 0 0 6px;
+    }
+    #header-home {
+        background: ~"transparent url([[pix:theme|ezone_logo]]) no-repeat center right";
+    }
+    h1.headermain {
+        display:none;
+    }
+    .headermenu {
+        margin:0;
+    }
+}
+ul {
+    &.topics {
+        li {
+            &.section {
+                margin-bottom:10px !important;
+                background-color:@standard_bg;
+
+                .content {
+                    display:block;
+                    position:relative;
+                    background-color:#fff;
+
+                    li.activity {
+                        margin-bottom:8px;
+                    }
+
+                    br {
+                        clear:both;
+                    }   
+                }
+                .no-overflow {
+                    overflow:visible;
+                }
+
+                .side {
+                    display:block;
+                    padding-top:10px;
+                    font-size:1.3em;
+                }
+            }
+            &.main {
+                border:1px solid @standard_border;
+            }
+        }
+    }
+    &.unlist {
+
+        .coursebox {
+            background-color: #F0F3F9;
+            border:1px solid #D9E0F0;
+            .round-corners(5px);
+
+            a {
+                font-weight:normal;
+            }
+            .info {
+                padding:0 10px;
+                h3 {
+                    margin:0;
+                    font-size:0.95em;
+                }
+            }
+        }
+    }
+}
+input[type="submit"] {
+    padding:1px 6px;
+}
+.headingblock {
+    font-weight:normal;
+    font-size:1.3em;
+    text-transform:uppercase;
+}
+.headermain {
+    padding-top:20px;
+    font-size:1.65em;
+    font-weight:normal;
+}
+.headermenu {
+    font-size:1em;
+}
+.navbar {
+    background-color:#fff;
+}
+
+/* Blocks */
+.block {
+
+    border:none;
+
+    .header {
+        margin:0;
+        padding:0;
+        margin-bottom:10px;
+        padding-top:2px;
+        background:none;
+
+        .title {
+            display:block;
+
+            h2 {
+                padding:1px 0 1px 7px;
+                background:@moodle_orange;
+                font-size: 1.1em;
+                line-height:1.55em;
+                color:#fff;
+                font-weight:bold;
+                text-transform:none;
+                text-shadow: 1px 1px 1px rgba(0,0,0,.5);
+                .round-corners(4px);
+            }
+
+            input.moveto {
+                position:relative;
+                left:3px;
+            }
+
+            .block_action {
+                margin-top:5px;
+                margin-right:10px;
+            }
+        }
+
+    }
+    .content {
+        background-color:#fff;
+    }
+
+}
+.block_calendar_month {
+    a {
+        text-decoration:none;
+    }
+}
+.block_course_list {
+    ul.unlist {
+        li {
+            margin-bottom:7px;
+        }
+    }
+}
+
+select#movetoid {
+    width:100%;
+}
+.categorypicker select.menuid {
+    width:100%;
+}
+.navbar ul li:last-child a {
+  /*color:#009edb;*/
+}
+.logininfo {
+    margin-bottom:10px !important;
+}
+select#id_link, select#id_links {
+    width:100%;
+}
+#page-admin-course-index {
+    table.editcourse select {
+        width:100%;
+    }
+}
+#quick_ref_block {
+    font-size: 0.9em;
+    color:@god_font;
+    line-height:1.6em;
+    
+    b {
+        color:#000;
+    }
+}
+table#staff_links {
+    margin:0 auto;
+    width:495px;
+    border:none;
+    background-color:#fff;
+
+    td {
+        height:130px;
+        text-align:center;
+        font-size:1.1em;
+        line-height:1.25em;
+        padding:0;
+    }
+
+    a {
+        text-decoration:none;
+        color:#616161;
+        display:block;
+        font-weight:bold;
+
+        &:hover {
+            text-decoration:underline;
+            color:#0099FF;
+        }
+        img {
+            border:none;
+            margin-bottom:2px;
+        }
+    }
+}
+#page-my-staff, #page-my-student {
+    #page-content {
+        #region-main {
+            h2 {
+                color:@god_font;
+                border-bottom:1px solid #DDE0E3;
+                padding-bottom:3px;
+            }
+        }
+    }
+}
