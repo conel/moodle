@@ -32,17 +32,11 @@
  * @copyright  2010 Remote-Learner.net
  * @author     Hubert Chathi <hubert@remote-learner.net>
  * @author     Olav Jordan <olav.jordan@remote-learner.net>
+ * @author     Nathan Kowald <nkowald@conel.ac.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require(dirname(__FILE__) . '/../config.php');
-// Redirect to either staff or student my homes
-if (strpos($USER->email, '@student.conel.ac.uk') === false) {
-    header('location: staff.php');
-} else {
-    header('location: student.php');
-}
-exit;
+require_once(dirname(__FILE__) . '/../config.php');
 require_once($CFG->dirroot . '/my/lib.php');
 
 redirect_if_major_upgrade_required();
@@ -52,7 +46,17 @@ $edit   = optional_param('edit', null, PARAM_BOOL);    // Turn editing on and of
 
 require_login();
 
-$strmymoodle = get_string('myhome');
+/* Banners */
+include($_SERVER['DOCUMENT_ROOT'] . '\theme\conel\banners\Banners.class.php');
+$audience = 2; // student
+$banners = new Banners($audience); 
+$banners_exist = $banners->bannersExist();
+$banners_found = $banners->getBanners();
+$audience_name = ucfirst($banners->getAudiencePath($audience));
+/* //Banners */
+
+//$strmymoodle = get_string('myhome');
+$strmymoodle = 'My home - Student';
 
 if (isguestuser()) {  // Force them to see system default, no editing allowed
     $userid = NULL; 
@@ -65,7 +69,7 @@ if (isguestuser()) {  // Force them to see system default, no editing allowed
     $userid = $USER->id;  // Owner of the page
     $context = get_context_instance(CONTEXT_USER, $USER->id);
     $PAGE->set_blocks_editing_capability('moodle/my:manageblocks');
-    $header = "$SITE->shortname: $strmymoodle";
+    $header = "$SITE->shortname: My home (Student)";
 }
 
 // Get the My Moodle page info.  Should always return something unless the database is broken.
@@ -80,13 +84,19 @@ if (!$currentpage->userid) {
 // Start setting up the page
 $params = array();
 $PAGE->set_context($context);
-$PAGE->set_url('/my/index.php', $params);
+$PAGE->set_url('/my/student.php', $params);
 $PAGE->set_pagelayout('mydashboard');
-$PAGE->set_pagetype('my-index');
+$PAGE->set_pagetype('my-student');
 $PAGE->blocks->add_region('content');
 $PAGE->set_subpage($currentpage->id);
 $PAGE->set_title($header);
 $PAGE->set_heading($header);
+/* Banners */
+$PAGE->requires->css('/lib/jquery/rotator/wt-rotator.css', true);
+$PAGE->requires->js('/lib/jquery/jquery-1.7.2.min.js', true);
+$PAGE->requires->js('/lib/jquery/jquery.easing.1.3.min.js', true);
+$PAGE->requires->js('/lib/jquery/rotator/js/jquery.wt-rotator.min.js', true);
+$PAGE->requires->js('/theme/conel/banners/js/config.js', true);
 
 if (get_home_page() != HOMEPAGE_MY) {
     if (optional_param('setdefaulthome', false, PARAM_BOOL)) {
@@ -136,7 +146,7 @@ if ($PAGE->user_allowed_editing()) {
         $editstring = get_string('updatemymoodleoff');
     }
 
-    $url = new moodle_url("$CFG->wwwroot/my/index.php", $params);
+    $url = new moodle_url("$CFG->wwwroot/my/student.php", $params);
     $button = $OUTPUT->single_button($url, $editstring);
     $PAGE->set_button($button);
 
@@ -149,9 +159,38 @@ if ($currentpage->userid == 0) {
     $CFG->blockmanagerclass = 'my_syspage_block_manager';
 }
 
-
 echo $OUTPUT->header();
 
-echo $OUTPUT->blocks_for_region('content');
+//echo $OUTPUT->blocks_for_region('content');
+?>
+<h2>News</h2>
+<?php if ($banners_exist === true) { ?>
+<div class="container">
+    <div class="wt-rotator">
+        <div class="screen"><noscript><img src="<?php echo $banners_found[0]['img_url']; ?>" alt="" /></noscript></div>
+        <div class="c-panel">
+            <div class="buttons"><div class="prev-btn"></div><div class="play-btn"></div><div class="next-btn"></div></div>
+            <div class="thumbnails">
+                <ul>
+                <?php foreach ($banners_found as $ban) {
+                    echo '<li><a href="'.$ban['img_url'].'"><img src="'.$ban['img_url'].'" alt="Banner" width="495" height="185" /></a><a href="'.$ban['link'].'"></a></li>' . PHP_EOL;
+                } ?>
+                </ul>
+            </div>     
+        </div><!-- // c-panel -->
+    </div><!-- // wt-rotator -->
+</div><!-- // container -->
 
+<?php 
+} else {
+    echo '<p>No banners have been added yet.</p>';
+}
+if (has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))) {
+    echo '<p style="text-align:right;"><a href="/theme/conel/banners/index.php?audience=2">Edit '.$audience_name.' Banners</a></p>';
+}
+?>
+
+<br />
+
+<?php
 echo $OUTPUT->footer();
