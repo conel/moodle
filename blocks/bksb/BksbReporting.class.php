@@ -16,6 +16,7 @@ class BksbReporting {
     private $server;
     private $password;
     private $selected_db;
+    private $num_queries;
 
     public $errors;
     public $con;
@@ -23,8 +24,6 @@ class BksbReporting {
     public $ass_cats;
     public $ass_types;
     public $question_counts;
-
-    private $num_queries;
 
     public function __construct() {
 
