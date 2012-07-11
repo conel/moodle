@@ -21,7 +21,7 @@ require_login($course);
 
 // nkowald - 2012-01-10 - Define $baseurl here, needs to keep all get distinct params
 $params = $bksb->getDistinctParams();
-$baseurl = $CFG->wwwroot.'/blocks/bksb/bksb_diagnostic_overview.php' . $params;
+$baseurl = $CFG->wwwroot.'/blocks/bksb/diagnostic_overview.php' . $params;
 
 $access_isteacher = true;
 
@@ -141,7 +141,7 @@ if ($user_id != 0) {
     $currentgroup = groups_get_course_group($course, true);
     if (!$currentgroup) $currentgroup  = NULL;
 
-    $get_url = $CFG->wwwroot . '/blocks/bksb/bksb_diagnostic_overview.php';
+    $get_url = $CFG->wwwroot . '/blocks/bksb/diagnostic_overview.php';
     echo '<form action="'.$get_url.'" method="GET">
         <input type="hidden" name="course_id" value="'.$course_id.'" />
         <table style="margin:0 auto;">
@@ -220,7 +220,7 @@ if ($user_id != 0) {
             $records_found = true;
             
             $picture = $OUTPUT->user_picture($student, array('size'=>40));
-            $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/bksb_diagnostic_overview.php?course_id='.$course_id.'&amp;id='.$student->id.'" title="View all assessments for '.fullname($student).'">'.fullname($student).'</a>';
+            $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/diagnostic_overview.php?course_id='.$course_id.'&amp;id='.$student->id.'" title="View all assessments for '.fullname($student).'">'.fullname($student).'</a>';
             $col_row = array($picture, $name_html);
 
             $diag_results = array();
@@ -278,7 +278,7 @@ if ($user_id != 0) {
         print_heading(get_string('courses'));
         echo '<div class="generalbox" style="width:95%; margin:auto">';
         foreach ($courses as $course) {
-            echo '<a href="bksb_diagnostic_overview.php?course_id='.$course->id.'">'.$course->fullname.'</a><br />';
+            echo '<a href="diagnostic_overview.php?course_id='.$course->id.'">'.$course->fullname.'</a><br />';
         }
         echo '</div>';
     }

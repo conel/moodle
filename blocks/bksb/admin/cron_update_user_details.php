@@ -2,8 +2,8 @@
 
 	if ($_SERVER["REMOTE_ADDR"] != $_SERVER["SERVER_ADDR"]) die("Cron script can't be run directly. It only comes out at night.");
 	
-    require_once(dirname(dirname(dirname(__FILE__))).'/config.php'); // global moodle config file.
-	include_once('BksbReporting.class.php');
+    require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php'); // global moodle config file.
+	include('../BksbReporting.class.php');
 	
     global $CFG, $USER;
 	
@@ -16,7 +16,7 @@
     $begintime = $time;
 
 	// First part of cron is to sync Moodle user postcodes and dob with EBS
-    //require_once($CFG->dirroot.'/blocks/ilp/templates/custom/dbconnect.php'); // include the connection code for CONEL's MIS db
+    //require($CFG->dirroot.'/blocks/ilp/templates/custom/dbconnect.php'); // include the connection code for CONEL's MIS db
 	/*
     $query = "SELECT STUDENT_ID, TO_CHAR(DATE_OF_BIRTH, 'DD/MM/YYYY') AS DOB, POST_CODE FROM FES.MOODLE_PEOPLE WHERE POST_CODE != 'ZZ99 ZZZ'";
 

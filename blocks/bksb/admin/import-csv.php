@@ -1,8 +1,6 @@
 <?php
-//ini_set('error_reporting', E_ALL);
-//ini_set('display_errors', 1);
 
-require_once('BKSBReporting.class.php');
+include('../BKSBReporting.class.php');
 $max_rows = 800;
 
 	if (isset($_POST['submit'])) {

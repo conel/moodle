@@ -2,8 +2,8 @@
 //  Users entered incorrect IDs when they used BKSB
 //  This page allows staff to update user details
 
-require_once('../../config.php');
-include_once('BksbReporting.class.php');
+require('../../../config.php');
+include('../BksbReporting.class.php');
 $bksb = new BksbReporting();
 
 $old_username = optional_param('old_username', '', PARAM_RAW);

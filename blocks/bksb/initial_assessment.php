@@ -20,7 +20,7 @@ require_login($course);
 
 // nkowald - 2012-01-10 - Define $baseurl here, needs to keep all get distinct params
 $params = $bksb->getDistinctParams();
-$baseurl = $CFG->wwwroot.'/blocks/bksb/bksb_initial_assessment.php' . $params;
+$baseurl = $CFG->wwwroot.'/blocks/bksb/initial_assessment.php' . $params;
 
 $title = 'BKSB - Initial Assessment Overview';
 $PAGE->set_context(get_system_context());
@@ -147,7 +147,7 @@ if ($user_id != 0) {
                 $bksb_results = $bksb->getResults($student->idnumber);
 
                 $picture = $OUTPUT->user_picture($student, array('size'=>40));
-                $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/bksb_initial_assessment.php?id='.$student->id.'">'.fullname($student).'</a>';
+                $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/initial_assessment.php?id='.$student->id.'">'.fullname($student).'</a>';
                 $col_row = array($picture, $name_html);
                 $row = array_merge($col_row, $bksb_results);
                 $table->add_data($row);
@@ -156,7 +156,7 @@ if ($user_id != 0) {
 
             $table->print_html();  /// Print the whole table
 
-            echo '<form name="options" action="bksb_initial_assessment.php?courseid='.$course_id.'" method="post">';
+            echo '<form name="options" action="initial_assessment.php?courseid='.$course_id.'" method="post">';
             echo '<input type="hidden" id="updatepref" name="updatepref" value="1" />';
             echo '<table id="optiontable" align="center">';
             echo '<tr align="right"><td>';
@@ -177,7 +177,7 @@ if ($user_id != 0) {
         }
     }
 
-    //redirect("bksb_initial_assessment.php$get_params", 'You are being directed to your own initial assessment results',0);
+    //redirect("initial_assessment.php$get_params", 'You are being directed to your own initial assessment results',0);
 }
 
 echo $OUTPUT->footer();

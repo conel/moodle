@@ -2,11 +2,11 @@
 //  Users entered incorrect IDs when they used BKSB
 //  This page allows staff to update user details
 
-    require_once('../../config.php');
+    require_once('../../../config.php');
     //require_once('block_ilp_lib.php');
-	include('../ilp/access_context.php');
+	//include('../ilp/access_context.php');
 
-    include_once('BksbReporting.class.php');
+    include_once('../BksbReporting.class.php');
     $bksb = new BksbReporting();
 
     global $GFG, $USER;

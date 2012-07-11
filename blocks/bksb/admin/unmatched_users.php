@@ -2,11 +2,10 @@
 	// Users entered incorrect IDs when they did their BKSB Initial Assessments
 	// This page allows staff to update user details
 
-    require_once('../../config.php');
-    //require_once('block_ilp_lib.php');
-	include('../ilp/access_context.php');
+    require('../../../config.php');
+	//include('../ilp/access_context.php');
 
-    include_once('BksbReporting.class.php');
+    include('../BksbReporting.class.php');
     $bksb = new BksbReporting();
 
     global $GFG, $USER;
