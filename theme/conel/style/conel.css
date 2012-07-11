@@ -201,3 +201,25 @@ table#staff_links a img {
   border-bottom: 1px solid #DDE0E3;
   padding-bottom: 3px;
 }
+table.bksb_results th {
+  white-space: normal !important;
+  border: 1px solid #CCC;
+}
+table.bksb_results td {
+  border: 1px solid #CCC;
+  background-color: #fff;
+}
+table.bksb_results td.cell {
+  text-align: center;
+  vertical-align: middle;
+}
+table.bksb_results td.fullname {
+  white-space: nowrap;
+}
+table.centered_tds td {
+  text-align: center;
+}
+.initialbar strong {
+  color: red;
+  padding-right: 3px;
+}
