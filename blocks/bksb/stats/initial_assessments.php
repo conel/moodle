@@ -62,7 +62,7 @@ function getGCSEResults($username) {
             $i++;
         }
         // If we have quals, put them into a nicely formatted bit of text to return
-        $html = '';
+        $html = '-';
         foreach ($user_quals as $qual) {
             $html .= $qual['award_title'] . "&nbsp;";
             $html .= $qual['qual_desc'];
@@ -78,15 +78,24 @@ function getGCSEResults($username) {
     return $html;
 }
 
-// Print headers
+$params = $bksb->getDistinctParams();
+$baseurl = $CFG->wwwroot . '/blocks/bksb/stats/initial_assessments.php' . $params;
+
 $title = 'BKSB - Initial Assessment Statistics';
-print_header($title, $title, "Inital Assessment Statistics", "", "", true, "&nbsp;", navmenu($course));
+$PAGE->set_context(get_context_instance(CONTEXT_SYSTEM));
+$PAGE->set_pagelayout('admin');
+$PAGE->set_title($title);
+$PAGE->set_heading($title);
+$PAGE->set_url($baseurl);
+
+echo $OUTPUT->header();
 
 // Get all BKSB groups
 $groups = $bksb->getBksbGroups();
 
-echo '<ul><li><a href="diagnostics.php">View Diagnostic Overview statistics</a></li></ul>';
-echo '<hr />';
+echo '<h2>Initial Assessment Statistics</h2>';
+
+echo '<ul><li><a href="diagnostic_assessments.php">View Diagnostic Assessment statistics</a></li></ul>';
 
 echo '<form action="initial_assessments.php" method="get">';
 echo '<table><tr>';
@@ -124,7 +133,6 @@ foreach ($groups as $group_name) {
 echo '</select></td></tr>';
 
 // nkowald - 2012-01-16 - Scott wants to be able to search via month year
-
 $months = array (
     '1' => 'Jan',
     '2' => 'Feb',
@@ -326,6 +334,5 @@ if ($group != '' && $iatype != '') {
 }
 echo '</div>';
 
-print_footer($course);
-
+echo $OUTPUT->footer();
 ?>

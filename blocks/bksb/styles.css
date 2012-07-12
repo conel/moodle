@@ -1,0 +1,18 @@
+ul#bksb_block_ul {
+    list-style-type:none;
+    margin:0;
+    padding:0;
+}
+ul#bksb_block_ul li {
+    margin:0;
+    padding:0;
+    padding-left:22px;
+    margin-bottom:12px;
+    margin-left:3px;
+}
+ul#bksb_block_ul li.ia_icon {
+    background:transparent url([[pix:block_bksb|ia-icon]]) no-repeat 0 0;
+}
+ul#bksb_block_ul li.da_icon {
+    background:transparent url([[pix:block_bksb|da-icon]]) no-repeat 0 0;
+}

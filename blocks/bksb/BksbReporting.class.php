@@ -19,7 +19,7 @@ class BksbReporting {
     private $num_queries;
 
     public $errors;
-    public $con;
+    public $debug;
     public $connection;
     public $ass_cats;
     public $ass_types;
@@ -30,19 +30,12 @@ class BksbReporting {
         global $CFG;
 
         $this->errors = array();
+        $this->debug = true; // false by default
+        $this->createBKSBConnection();
+        $this->num_queries = 0;
+        $this->question_counts = array();
 
-        $this->server = $CFG->bksbhost;
-        $this->user = $CFG->bksbuser;
-        $this->password = $CFG->bksbpassword;
-        $this->selected_db = "bksb_mini_test";
-
-        // create an instance of the  ADO connection object
-        $this->connection = new COM ("ADODB.Connection") or die("Cannot start ADO");
-        // define connection string, specify database driver
-        $con = "PROVIDER=SQLOLEDB;SERVER=".$this->server.";UID=".$this->user.";PWD=".$this->password.";DATABASE=".$this->selected_db;
-        $this->connection->open($con); //Open the connection to the database
-
-        // array to hold table columns - ass cats (usage: your mum is an ass-cat).
+        // array to hold table columns - ass cats
         $this->ass_cats = array(
             'English Results', 
             'Maths Results', 
@@ -68,57 +61,35 @@ class BksbReporting {
             10 => 'Numeracy L3'
         );
 
-        $this->num_queries = 0;
-        $this->question_counts = array();
-
     }
 
-    // Idiot me only updated usernames in one table, instead of 'all instances' that use the username: FIX!
-    /*
-    public function restoreUsernames() {
-    
-        $query = "SELECT user_id, userName FROM dbo.bksb_Users ORDER BY user_id";
-        if ($result = $this->old_connection->execute($query)) {
-            $old_usernames = array();
-            while (!$result->EOF) {
-                $user_id = $result->fields['user_id']->value;
-                $username = $result->fields['userName']->value;
-                
-                $old_usernames[$user_id] = $username;
-                
-                $result->MoveNext(); //move on to the next record
-            }
-        }
-        
-        // show array
-        foreach ($old_usernames as $key => $value) {
-            // Query will update record $key with username of $value
-            $update_query = "UPDATE dbo.bksb_Users SET userName = '$value' WHERE user_id = $key";
-            if ($result_new = $this->connection->execute($update_query)) {
-                // worked!
-            } else {
-                echo "Update failed for user $key";
-            }
-        }
-        
+    private function createBKSBConnection() {
+        $bksb_server = get_config('block_bksb', 'db_server');
+        $bksb_user = get_config('block_bksb', 'db_user');
+        $bksb_password = get_config('block_bksb', 'db_password');
+        $bksb_db = get_config('block_bksb', 'db_name');
+
+        // create an instance of the  ADO connection object
+        $this->connection = new COM ("ADODB.Connection") or die("Cannot start ADO");
+        // define connection string, specify database driver
+        $con = "PROVIDER=SQLOLEDB;SERVER=".$bksb_server.";UID=".$bksb_user.";PWD=".$bksb_password.";DATABASE=".$bksb_db;
+        $this->connection->open($con);
     }
-    */
+
     
     // Legacy function
     public function getAssTypeFromNo($no) {
         if (isset($this->ass_types[$no])) {
             return $this->ass_types[$no];
-        } else {
-            return false;
         }
+        return false;
     }
     
     public function getAllResults($user_id='') {
-
         if ($user_id == '') return false;
         $details = array();
         
-        // nkowald - 2012-01-03 - If username contain's single quote, escape it
+        // nkowald - 2012-01-03 - If username contains single quote: escape it
         $user_id = str_replace("'", "''", $user_id);
 
         $query = "SELECT Result FROM dbo.bksb_IAResults WHERE UserName = '$user_id' ORDER BY DateCompleted DESC";
@@ -126,7 +97,7 @@ class BksbReporting {
             $this->num_queries++;
             while (!$result->EOF) {
                 $details[$user_id][] = $result->fields['Result']->value;
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             $result->Close();
         }
@@ -142,7 +113,7 @@ class BksbReporting {
                 $details[$user_id][] = 'Email ' . $result->fields['Email']->value;
                 $details[$user_id][] = 'General ' . $result->fields['General']->value;
                 $details[$user_id][] = 'Internet ' .$result->fields['Internet']->value;
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             $result->Close();
         }
@@ -280,7 +251,7 @@ class BksbReporting {
             while (!$result->EOF) {
                 $overview[$result->fields['curric_ref']->value] = ($result->fields['TrackingComment']->value == NULL) ? 'Tick' : $result->fields['TrackingComment']->value;
                 $curric_refs[] = $result->fields['curric_ref']->value;
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             $result->Close();
 
@@ -303,7 +274,7 @@ class BksbReporting {
                         'title' => $result->fields['Title']->value,
                         'result' => $grade
                     );
-                    $result->MoveNext(); //move on to the next record
+                    $result->MoveNext();
                 }
                 $result->Close();
             }
@@ -374,11 +345,11 @@ class BksbReporting {
                 break;
 
             case 'Tick':
-                $html = '<img src="images/tick.png" alt="passed" width="20" height="19" />';
+                $html = '<img src="pix/tick.png" alt="passed" width="20" height="19" />';
                 break;
 
             case 'X':
-                $html = '<img src="images/red-x.gif" alt="Not Yet Passed" width="15" height="15" />';
+                $html = '<img src="pix/red-x.gif" alt="Not Yet Passed" width="15" height="15" />';
                 break;
 
         }
@@ -389,7 +360,6 @@ class BksbReporting {
         if (count($this->question_counts) > 0) return $this->question_counts;
 
         $query = "SELECT COUNT(report_pos) AS no_questions, Subject + ' ' + [Level] AS assessment_name FROM bksb_CurricCodes WHERE ([Level] IS NOT NULL) GROUP BY Subject, [Level] ORDER BY Subject, [Level]"; 
-        $result->connection->debug = true;
         if ($result = $this->connection->execute($query)) {
             $this->num_queries++;
             while (!$result->EOF) {
@@ -483,7 +453,7 @@ class BksbReporting {
                     $title = $result->fields['Title']->value;
                     $curric_ref = $result->fields['curric_ref']->value;
                     $ordered_results[] = array($title, $curric_ref);
-                    $result->MoveNext(); //move on to the next record
+                    $result->MoveNext();
                 }
                 $result->Close();
                 return $ordered_results;
@@ -500,7 +470,7 @@ class BksbReporting {
         $rename = str_ireplace(' Diagnostic', '', $rename);
         $rename = str_ireplace('Mathematics', 'Numeracy', $rename);
         $rename = str_ireplace('English', 'Literacy', $rename);
-        // If one of the above has been replace - return now
+        // If one of the above has been replaced: return the replacement text
         if ($name != $rename) return $rename;
         $rename = str_ireplace('lit', 'Literacy', $rename);
         $rename = str_ireplace('num', 'Numeracy', $rename);
@@ -523,7 +493,6 @@ class BksbReporting {
     }
     
     public function getBksbSessionNo($username='', $ass_type=0) {
-        
         if ($session_id != '') {
             return $session_id;
         } else {
@@ -543,7 +512,7 @@ class BksbReporting {
             while (!$result->EOF) {
                 $percentage = $result->fields['percentage']->value;
                 $percentage = round($percentage, 0);
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             $result->Close();
         }
@@ -694,9 +663,8 @@ class BksbReporting {
         $new_usernames = array();
         $no_users_updated = 0;
         
-        require_once(dirname(dirname(dirname(__FILE__))).'/config.php'); // global moodle config file.
         global $CFG;
-        require_once($CFG->dirroot.'/blocks/ilp/templates/custom/dbconnect.php'); // include the connection code for CONEL's MIS db
+        //require_once($CFG->dirroot.'/blocks/ilp/templates/custom/dbconnect.php'); // include the connection code for CONEL's MIS db
         
         // Before we return invalid BKSB users lets search moodle user table by first and last names to see if we get matched: then update bksb
         // Add new usernames to an array to remove duplicates at the end
@@ -721,7 +689,7 @@ class BksbReporting {
                         // Handle duplicate users - If a valid idnumber is found already in BKSB, skip updating this incorrect ID
                         $query = "UPDATE dbo.bksb_Users SET userName = '".$user_match->idnumber."' WHERE (user_id = '".$user['id']."')";
                         if (!$result = $this->connection->execute($query)) {
-                            echo "Query failed: $query <br />";
+                            $this->errors[] = "Query failed: $query";
                         }
                         $this->num_queries++;
                         $result->Close();
@@ -731,7 +699,7 @@ class BksbReporting {
                     if ($user_exists[1] === TRUE) {
                         $gm_query = "UPDATE dbo.bksb_GroupMembership SET UserName = '".$user_match->idnumber."' WHERE UserName = '".$user['username']."'";
                         if (!$gm_result = $this->connection->execute($gm_query)) {
-                            echo "Query failed: $gm_query <br />";
+                            $this->errors[] = "Query failed: $gm_query";
                         }
                         $gm_result->Close();
                         $this->num_queries++;
@@ -740,7 +708,7 @@ class BksbReporting {
                     if ($user_exists[2] === TRUE) {
                         $ia_query = "UPDATE dbo.bksb_IAResults SET UserName = '".$user_match->idnumber."' WHERE UserName = '".$user['username']."'";
                         if (!$ia_result = $this->connection->execute($ia_query)) {
-                            echo "Query failed: $ia_query <br />";
+                            $this->errors[] = "Query failed: $ia_query";
                         }
                         $ia_result->Close();
                         $this->num_queries++;
@@ -749,7 +717,7 @@ class BksbReporting {
                     if ($user_exists[3] === TRUE) {
                         $ictia_query = "UPDATE dbo.bksb_ICTIAResults SET UserName = '".$user_match->idnumber."' WHERE UserName = '".$user['username']."'";
                         if (!$ictia_result = $this->connection->execute($ictia_query)) {
-                            echo "Query failed: $ictia_query <br />";
+                            $this->errors[] = "Query failed: $ictia_query";
                         }
                         $ictia_result->Close();
                         $this->num_queries++;
@@ -758,7 +726,7 @@ class BksbReporting {
                     if ($user_exists[4] === TRUE) {
                         $sess_query = "UPDATE dbo.bksb_Sessions SET userName = '".$user_match->idnumber."' WHERE userName = '".$user['username']."'";
                         if (!$sess_result = $this->connection->execute($sess_query)) {
-                            echo "Query failed: $sess_query <br />";
+                            $this->errors[] = "Query failed: $sess_query";
                         }
                         $sess_query->Close();
                         $this->num_queries++;
@@ -820,7 +788,7 @@ class BksbReporting {
                         // Handle duplicate users - If a valid idnumber is found already in BKSB, skip updating this incorrect ID
                         $query = "UPDATE dbo.bksb_Users SET userName = '$user_match_idnumber' WHERE (user_id = '".$user['id']."')";
                         if (!$result = $this->connection->execute($query)) {
-                            echo "Query failed: $query <br />";
+                            $this->errors[] = "Query failed: $query";
                         }
                         $result->Close();
                         $this->num_queries++;
@@ -829,7 +797,7 @@ class BksbReporting {
                     if ($user_exists[1] === TRUE) {
                         $gm_query = "UPDATE dbo.bksb_GroupMembership SET UserName = '$user_match_idnumber' WHERE UserName = '".$user['username']."'";
                         if (!$gm_result = $this->connection->execute($gm_query)) {
-                            echo "Query failed: $gm_query <br />";
+                            $this->errors[] = "Query failed: $gm_query";
                         }
                         $gm_result->Close();
                         $this->num_queries++;
@@ -838,7 +806,7 @@ class BksbReporting {
                     if ($user_exists[2] === TRUE) {
                         $ia_query = "UPDATE dbo.bksb_IAResults SET UserName = '$user_match_idnumber' WHERE UserName = '".$user['username']."'";
                         if (!$ia_result = $this->connection->execute($ia_query)) {
-                            echo "Query failed: $ia_query <br />";
+                            $this->errors[] = "Query failed: $ia_query";
                         }
                         $ia_result->Close();
                         $this->num_queries++;
@@ -847,7 +815,7 @@ class BksbReporting {
                     if ($user_exists[3] === TRUE) {
                         $ictia_query = "UPDATE dbo.bksb_ICTIAResults SET UserName = '$user_match_idnumber' WHERE UserName = '".$user['username']."'";
                         if (!$ictia_result = $this->connection->execute($ictia_query)) {
-                            echo "Query failed: $ictia_query <br />";
+                            $this->errors[] = "Query failed: $ictia_query";
                         }
                         $ictia_result->Close();
                         $this->num_queries++;
@@ -856,7 +824,7 @@ class BksbReporting {
                     if ($user_exists[4] === TRUE) {
                         $sess_query = "UPDATE dbo.bksb_Sessions SET userName = '$user_match_idnumber' WHERE userName = '".$user['username']."'";
                         if (!$sess_result = $this->connection->execute($sess_query)) {
-                            echo "Query failed: $sess_query <br />";
+                            $this->errors[] = "Query failed: $sess_query";
                         }
                         $sess_result->Close();
                         $this->num_queries++;
@@ -946,7 +914,7 @@ class BksbReporting {
                                 'reason' => $reason
                     );
                 }
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             $result->Close();
         }
@@ -962,7 +930,7 @@ class BksbReporting {
                 $this->num_queries++;
                 while (!$result->EOF) {
                     $groups[] = $result->fields['group_id']->value;				
-                    $result->MoveNext(); //move on to the next record
+                    $result->MoveNext();
                 }
                 $result->Close();
                 return $groups;
@@ -998,7 +966,7 @@ class BksbReporting {
                             $this->num_queries++;
                             while (!$result_ass->EOF) {
                                 $assessments[] = $result_ass->fields['Assessment']->value;
-                                $result_ass->MoveNext(); //move on to the next record
+                                $result_ass->MoveNext();
                             }
                             
                             // Literacy E2
@@ -1036,7 +1004,7 @@ class BksbReporting {
                             $assessments = array();
                         }
                         
-                        $result->MoveNext(); //move on to the next record
+                        $result->MoveNext();
                     }
                     
                     $result->Close();
@@ -1066,7 +1034,7 @@ class BksbReporting {
                 // Need to escape single quotes
                 $user = str_replace("'", "''", $user);
                 $users[] = $user;
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             $result->Close();
             
@@ -1093,7 +1061,7 @@ class BksbReporting {
                 while (!$result->EOF) {
                     $name['firstname'] = ucwords($result->fields['FirstName']->value);
                     $name['lastname'] = ucwords($result->fields['LastName']->value);
-                    $result->MoveNext(); //move on to the next record
+                    $result->MoveNext();
                 }
                 
                 $result->Close();
@@ -1149,7 +1117,7 @@ class BksbReporting {
 
                     while (!$result->EOF) {
                         $sessions[] = $result->fields['session_id']->value;
-                        $result->MoveNext(); //move on to the next record
+                        $result->MoveNext();
                     }
                     $result->Close();
                     
@@ -1180,7 +1148,7 @@ class BksbReporting {
                             $user_ass[$username]['user_name'] = $username;
                             $user_ass[$username]['name'] = $result->fields['FirstName']->value . ' ' . $result->fields['LastName']->value;
                             $user_ass[$username]['results'][] = $result->fields['Result']->value;
-                            $result->MoveNext(); //move on to the next record
+                            $result->MoveNext();
                         }
                         
                         // Set total counts
@@ -1262,7 +1230,7 @@ class BksbReporting {
                         $user_ass[$username]['results']['general'] = $result->fields['General']->value;
                         $user_ass[$username]['results']['internet'] = $result->fields['Internet']->value;
 
-                        $result->MoveNext(); //move on to the next record
+                        $result->MoveNext();
                     }
                     
                     // Set total counts
@@ -1475,7 +1443,7 @@ class BksbReporting {
             if ($user_exists[0] === TRUE) {			
                 $query = "UPDATE dbo.bksb_Users SET userName = '$new_username', FirstName = '$firstname', LastName = '$lastname' WHERE (userName = '$old_username')";
                 if (!$result = $this->connection->execute($query)) {
-                    echo "Query failed: $query <br />";
+                    $this->errors[] = "Query failed: $query";
                     $updated = FALSE;
                 }
                 $result->Close();
@@ -1486,7 +1454,7 @@ class BksbReporting {
             if ($user_exists[1] === TRUE) {
                 $gm_query = "UPDATE dbo.bksb_GroupMembership SET UserName = '$new_username' WHERE UserName = '$old_username'";
                 if (!$gm_result = $this->connection->execute($gm_query)) {
-                    echo "Query failed: $gm_query <br />";
+                    $this->errors[] = "Query failed: $gm_query";
                     $updated = FALSE;
                 }
                 $this->num_queries++;
@@ -1496,7 +1464,7 @@ class BksbReporting {
             if ($user_exists[2] === TRUE) {
                 $ia_query = "UPDATE dbo.bksb_IAResults SET UserName = '$new_username' WHERE UserName = '$old_username'";
                 if (!$ia_result = $this->connection->execute($ia_query)) {
-                    echo "Query failed: $ia_query <br />";
+                    $this->errors[] = "Query failed: $ia_query";
                     $updated = FALSE;
                 }
                 $ia_result->Close();
@@ -1506,7 +1474,7 @@ class BksbReporting {
             if ($user_exists[3] === TRUE) {
                 $ictia_query = "UPDATE dbo.bksb_ICTIAResults SET UserName = '$new_username' WHERE UserName = '$old_username'";
                 if (!$ictia_result = $this->connection->execute($ictia_query)) {
-                    echo "Query failed: $ictia_query <br />";
+                    $this->errors[] = "Query failed: $ictia_query";
                     $updated = FALSE;
                 }
                 $ictia_result->Close();
@@ -1516,7 +1484,7 @@ class BksbReporting {
             if ($user_exists[4] === TRUE) {
                 $sess_query = "UPDATE dbo.bksb_Sessions SET userName = '$new_username' WHERE userName = '$old_username'";
                 if (!$sess_result = $this->connection->execute($sess_query)) {
-                    echo "Query failed: $sess_query <br />";
+                    $this->errors[] = "Query failed: $sess_query";
                     $updated = FALSE;
                 }
                 $sess_result->Close();
@@ -1574,7 +1542,7 @@ class BksbReporting {
             $this->num_queries++;
             while (!$result->EOF) {
                 $username = $result->fields['userName']->value;
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             if ($username != '') {
                 return $username;
@@ -1587,7 +1555,7 @@ class BksbReporting {
             $usernames = array();
             while (!$result->EOF) {
                 $usernames[] = $result->fields['userName']->value;
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             if (count($usernames) > 0) {
                 return $usernames;
@@ -1600,7 +1568,7 @@ class BksbReporting {
             $this->num_queries++;
             while (!$result->EOF) {
                 $username = $result->fields['userName']->value;
-                $result->MoveNext(); //move on to the next record
+                $result->MoveNext();
             }
             if ($username != '') {
                 return $username;
@@ -1613,13 +1581,12 @@ class BksbReporting {
 
     // This will keep ONLY distinct paramaters
     public function getDistinctParams() {
-
+        $param = '';	
         $params = array();
         foreach ($_GET as $key => $value) {
             if ($key == 'page' || $value == '') continue;
             $params[$key] = $value;
         }
-        $param = '';	
         if (count($params) == 0) return $param;
 
         $c = 0;
@@ -1666,21 +1633,51 @@ class BksbReporting {
         return $students;
     }
 
+    // Idiot me only updated usernames in one table, instead of 'all instances' that use the username: FIX!
+    /*
+    public function restoreUsernames() {
+    
+        $query = "SELECT user_id, userName FROM dbo.bksb_Users ORDER BY user_id";
+        if ($result = $this->old_connection->execute($query)) {
+            $old_usernames = array();
+            while (!$result->EOF) {
+                $user_id = $result->fields['user_id']->value;
+                $username = $result->fields['userName']->value;
+                $old_usernames[$user_id] = $username;
+                $result->MoveNext();
+            }
+        }
+        
+        // show array
+        foreach ($old_usernames as $key => $value) {
+            // Query will update record $key with username of $value
+            $update_query = "UPDATE dbo.bksb_Users SET userName = '$value' WHERE user_id = $key";
+            if ($result_new = $this->connection->execute($update_query)) {
+                // worked!
+            } else {
+                $this->errors[] = "Update failed for user $key";
+            }
+        }
+    }
+    */
+
     public function __destruct() {
 
         $this->connection->Close();
-        echo '<p><strong>Number of queries: ' . $this->num_queries . '</strong></p>';
-        if (count($this->errors) > 0) {
 
-            echo '<div style="color:red;">';
-            echo "<h2>Errors</h2>";
-            echo '<ul>';
-            foreach($this->errors as $error) {
-                echo "<li>$error</li>";
+        if ($this->debug === true) {
+            echo '<p><strong>Number of SQL queries: ' . $this->num_queries . '</strong></p>';
+
+            if (count($this->errors) > 0) {
+                echo '<div style="color:red;">';
+                echo "<h2>Errors</h2>";
+                echo '<ul>';
+                foreach($this->errors as $error) {
+                    echo "<li>$error</li>";
+                }
+                echo '</ul>';
+                echo '</div>';
             }
-            echo '</ul>';
-            echo '</div>';
-
         }
 
         $this->errors[] = array();

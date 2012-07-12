@@ -3,43 +3,76 @@
 
         function init() {
             $this->title = get_string('bksb', 'block_bksb');
+            //$this->cron = 43200; // run the cron at minimum once every 12 hour
+        }
+
+        /**
+        * Allow the user to set sitewide configuration options for the block.
+        *
+        * @return bool true
+        */
+        function has_config() {
+            return true;
+        }
+
+        /**
+        * Allow the user to set specific configuration options for the instance of
+        * the block attached to a course.
+        *
+        * @return bool true
+        */
+        function instance_allow_config() {
+            return false;
+        }
+
+        /**
+        * Prevent the user from having more than one instance of the block on each
+        * course.
+        *
+        * @return bool false
+        */
+        function instance_allow_multiple() {
+            return false;
         }
 
         function get_content() {
 
-            global $USER;
+            global $USER, $COURSE;
 
             if ($this->content !== NULL) {
                 return $this->content;
             }
 
             $user_id = $USER->id;
-            $course_id = (isset($_GET['course'])) ? $_GET['course'] : '';
+            $course_id = $COURSE->id;
+
+            $url_ia = $CFG->wwwroot . '/blocks/bksb/initial_assessment.php';
+            $url_do = $CFG->wwwroot . '/blocks/bksb/diagnostic_assessment.php';
 
             $this->content = new stdClass;
 
-            // Check user is student
-            $user_is_student = true;
+            // Is the logged in user a student?
+            $user_is_student = (strpos($USER->email, '@student.conel.ac.uk') === false) ? false : true;
 
             $block_html = '<ul id="bksb_block_ul">';
 
-            // Student Results
+            /* Student Results */
             if ($user_is_student === true) {
-
                 $get_params = sprintf('?id=%d', $user_id);
-                if ($course_id != '') $get_params .= sprintf('&amp;course=%d', $course_id);
-
-                $block_html .= '<li class="ia_icon"><a href="'.$CFG->wwwroot.'/blocks/bksb/bksb_initial_assessment.php'.$get_params.'">'.get_string('my_initial_assessments', 'block_bksb').'</a></li>
-                    <li class="da_icon"><a href="'.$CFG->wwwroot.'/blocks/bksb/bksb_diagnostic_overview.php'.$get_params.'">'.get_string('my_diagnostic_assessments', 'block_bksb').'</a></li>';
-
-            } else {
-                // Course Results
-                
+                if ($course_id != '') {
+                    $get_params .= sprintf('&amp;course_id=%d', $course_id);
+                }
+                $block_html .= '<li class="ia_icon"><a href="'.$url_ia . $get_params.'">'.get_string('my_initial_assessments', 'block_bksb').'</a></li>
+                    <li class="da_icon"><a href="'.$url_do . $get_params.'">'.get_string('my_diagnostic_assessments', 'block_bksb').'</a></li>';
+            }  
+            
+            /* Course Results */
+            if ($user_is_student === false) {
                 if ($course_id == '') {
-                    $block_html = 'Course ID required';
+                    $block_html .= '<li>Course ID required</li>';
                 } else {
-                    $block_html = '<li class="ia_icon"><a href="'.$CFG->wwwroot.'/blocks/bksb/bksb_initial_assessment.php?course='.$course_id.'">'.get_string('initial_assessments').'</a></li>
-                    <li class="da_icon"><a href="'.$CFG->wwwroot.'/blocks/bksb/bksb_diagnostic_overview.php?course='.$course_id.'&amp;assessment=1">'.get_string('diagnostic_assessments').'</a></li>';
+                    $block_html .= '<li class="ia_icon"><a href="'.$url_ia.'?course_id='.$course_id.'">'.get_string('initial_assessments', 'block_bksb').'</a></li>
+                    <li class="da_icon"><a href="'.$url_do.'?course_id='.$course_id.'&amp;assessment=1">'.get_string('diagnostic_assessments', 'block_bksb').'</a></li>';
                 }
             }
             $block_html .= '</ul>';

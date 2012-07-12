@@ -22,15 +22,21 @@ require_login($course);
 $params = $bksb->getDistinctParams();
 $baseurl = $CFG->wwwroot.'/blocks/bksb/initial_assessment.php' . $params;
 
+// TODO - change! - Needs some sort of is teacher or admin capability
+$access_isteacher = true;
+
+if ($course_id != 1) {
+    $PAGE->set_context($coursecontext);
+    //$PAGE->set_pagelayout('course');
+} else if ($user_id != 0) {
+    $PAGE->set_context(get_context_instance(CONTEXT_USER, $USER->id));
+    $PAGE->navigation->extend_for_user($USER);
+    //$PAGE->set_pagelayout('user');
+}
 $title = 'BKSB - Initial Assessment Overview';
-$PAGE->set_context(get_system_context());
-//$PAGE->set_pagelayout('admin');
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 $PAGE->set_url($baseurl);
-
-// TODO - change! - Needs some sort of is teacher or admin capability
-$access_isteacher = true;
 
 echo $OUTPUT->header();
 
@@ -43,7 +49,7 @@ if ($user_id != 0) {
     }
 
     echo '<div style="text-align:center;">';
-        echo "<h2><span>$fullname</span></h2>";
+        echo "<h2>Initial Assessment for <span>$fullname</span></h2>";
         $profile_link = $CFG->wwwroot . "/user/profile.php?id=$user_id&amp;courseid=$course_id";
         echo '<a href="'.$profile_link.'" title="View Profile">'.$OUTPUT->user_picture($user, array('size'=>100)).'</a>';
         echo '<br /><br />';
@@ -147,7 +153,7 @@ if ($user_id != 0) {
                 $bksb_results = $bksb->getResults($student->idnumber);
 
                 $picture = $OUTPUT->user_picture($student, array('size'=>40));
-                $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/initial_assessment.php?id='.$student->id.'">'.fullname($student).'</a>';
+                $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/initial_assessment.php?id='.$student->id.'&amp;course_id='.$course_id.'">'.fullname($student).'</a>';
                 $col_row = array($picture, $name_html);
                 $row = array_merge($col_row, $bksb_results);
                 $table->add_data($row);

@@ -18,17 +18,28 @@ include('../BksbReporting.class.php');
 $bksb = new BksbReporting();
 
 // Print headers
-$title = 'BKSB - Diagnostic Overview Statistics';
-print_header($title, $title, "Diagnostic Overview Statistics", "", "", true, "&nbsp;", navmenu($course));
+$title = 'BKSB - Diagnostic Assessment Statistics';
+
+$params = $bksb->getDistinctParams();
+$baseurl = $CFG->wwwroot . '/blocks/bksb/stats/diagnostic_assessments.php' . $params;
+
+$PAGE->set_context(get_context_instance(CONTEXT_SYSTEM));
+$PAGE->set_pagelayout('admin');
+$PAGE->set_title($title);
+$PAGE->set_heading($title);
+$PAGE->set_url($baseurl);
+
+echo $OUTPUT->header();
 
 // Get all BKSB groups
 $groups = $bksb->getBksbGroups();
 
+echo '<h2>Diagnostic Assessment Statistics</h2>';
 echo '<ul><li><a href="initial_assessments.php">View Inital Assessment Statistics</a></li></ul>';
-echo '<hr />';
+
 echo '<div id="bksb_stats">';
 
-echo '<form action="diagnostics.php" method="get">';
+echo '<form action="diagnostic_assessments.php" method="get">';
 echo '<p><strong>Group:</strong>&nbsp;';
 echo '<select name="group" onchange="javascript:this.form.submit()">';
 echo '<option value="">-- Select Group --</option>';
@@ -91,7 +102,5 @@ if ($group != '') {
 
 echo '</div>';
 
-print_footer($course);
-
+echo $OUTPUT->footer();
 ?>
-
