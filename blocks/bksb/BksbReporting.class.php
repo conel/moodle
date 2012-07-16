@@ -4,11 +4,12 @@
 *  BKBSReporting
 *  ====================
 *
-*  @usage           Used to retrieve Initial Assessment Results
+*  @usage           Used to retrieve BKSB Initial and Diagnostic 
+*                   Assessment results
 *
 *  @author			Nathan Kowald
 *  @since			26-08-2010
-*  @lastmodified    30-08-2011
+*  @lastmodified    16-07-2012
 *
 ******************************************************************/
 class BksbReporting {
@@ -663,7 +664,7 @@ class BksbReporting {
         $new_usernames = array();
         $no_users_updated = 0;
         
-        global $CFG;
+        global $CFG, $DB;
         //require_once($CFG->dirroot.'/blocks/ilp/templates/custom/dbconnect.php'); // include the connection code for CONEL's MIS db
         
         // Before we return invalid BKSB users lets search moodle user table by first and last names to see if we get matched: then update bksb
@@ -673,7 +674,7 @@ class BksbReporting {
             $firstname = $user['firstname'];
             $lastname = $user['lastname'];
             
-            if ($user_match = get_record('user', 'firstname', $firstname, 'lastname', $lastname)) {
+            if ($user_match = $DB->get_record('user', array('firstname' => $firstname, 'lastname' => $lastname))) {
                 $no_matches = count($user_match);
                 
                 if ($no_matches === 1 && $user_match->idnumber != '') {
@@ -767,7 +768,7 @@ class BksbReporting {
                 }
                 
                 $student_id = '';
-                if ($matches = get_records_sql($query)) {
+                if ($matches = $DB->get_records_sql($query)) {
                     foreach($matches as $match) {
                         $student_id = $match->idnumber;
                     }
@@ -1409,8 +1410,8 @@ class BksbReporting {
                     // Remove duplicates
                     
                     foreach ($delete_ids as $id) {
-                        $sql = "DELETE FROM dbo.bksb_Users WHERE user_id = '$id'";
-                        if ($result = $this->connection->execute($sql)) {
+                        $query = "DELETE FROM dbo.bksb_Users WHERE user_id = '$id'";
+                        if ($result = $this->connection->execute($query)) {
                             $this->num_queries++;
                             $no_dupes_deleted++;
                         }
@@ -1511,10 +1512,11 @@ class BksbReporting {
     // Get user ids of E-Learning Technologists
     // Check if given user is an E-learning "technologist"
     public function is_elt($userid = '') {
+        global $DB;
         if ($userid != '') {
             $query = "SELECT DISTINCT userid FROM mdl_role_assignments WHERE roleid = (SELECT id FROM mdl_role WHERE shortname = 'elearningtechnologist')";
             $user_ids = array();
-            if ($users = get_records_sql($query)) {
+            if ($users = $DB->get_records_sql($query)) {
                 foreach ($users as $user) {
                     $user_ids[] = $user->userid;
                 }

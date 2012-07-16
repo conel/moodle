@@ -3,11 +3,12 @@
 require('../../config.php');
 require('BksbReporting.class.php');
 require($CFG->libdir.'/tablelib.php');
+require($CFG->dirroot . '/group/lib.php'); // Required to get group members
 $bksb = new BksbReporting();
 
 $user_id = optional_param('id', 0, PARAM_INT);
 $course_id = optional_param('course_id', SITEID, PARAM_INT);
-$group = optional_param('group', -1, PARAM_INT);
+$group = optional_param('group', 0, PARAM_INT);
 $updatepref = optional_param('updatepref', -1, PARAM_INT);
 $ass_no = optional_param('assessment', 1, PARAM_INT);
 
@@ -41,6 +42,9 @@ $PAGE->set_url($baseurl);
 
 echo $OUTPUT->header();
 
+// BKSB logo - branding
+echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo" width="261" height="52" class="bksb_logo" />';
+
 // User
 if ($user_id != 0) {
 
@@ -49,7 +53,7 @@ if ($user_id != 0) {
         $conel_id = $user->idnumber;
     }
 
-    echo '<div style="text-align:center;">';
+    echo '<div class="bksb_header">';
         echo "<h2>Diagnostic Assessment Overview for <span>$fullname</span></h2>";
         echo $OUTPUT->user_picture($user, array('size'=>100));
         echo '<br /><br />';
@@ -148,11 +152,13 @@ if ($user_id != 0) {
     $currentgroup = groups_get_course_group($course, true);
     if (!$currentgroup) $currentgroup  = NULL;
 
+    echo '<div class="bksb_header">';
+
     $get_url = $CFG->wwwroot . '/blocks/bksb/diagnostic_assessment.php';
-    echo '<form action="'.$get_url.'" method="GET">
+    echo '<form action="'.$get_url.'" method="get">
         <input type="hidden" name="course_id" value="'.$course_id.'" />
         <table style="margin:0 auto;">
-        <tr><td>Assessment Type:</td><td>
+        <tr><td><strong>Assessment Type:</strong></td><td>
         <select name="assessment" onchange="this.form.submit()">
             <option value="">-- Select Assessment Type --</option>';
 
@@ -163,18 +169,19 @@ if ($user_id != 0) {
             echo '<option value="'.$key.'">'.$value.'</option>';
         }
     }
-    echo '</select></td></tr></table></form><br />';
+    echo '</select></td></tr></table></form>';
+
+    $ass_type = $bksb->getAssTypeFromNo($ass_no);
+    echo "<h2><span>$ass_type</span> - Diagnostic Assessment Overview (<a href=\"".$CFG->wwwroot."/course/view.php?id=".$course->id."\">".$course->shortname."</a>)</h2>";
 
     $isseparategroups = ($course->groupmode == SEPARATEGROUPS 
         && $course->groupmodeforce 
         && !has_capability('moodle/site:accessallgroups', $context)
     );	
 
-    $ass_type = $bksb->getAssTypeFromNo($ass_no);
-
-    print_heading($ass_type . ' - Diagnostic Assessment Overview ('.$course->shortname.')');
     groups_print_course_menu($course, $baseurl); 
     echo '<br />';
+    echo '</div>';
 
     // Get BKSB Result categories
     $cols = array('picture', 'fullname');
@@ -209,7 +216,13 @@ if ($user_id != 0) {
     foreach ($questions as $question) {
         $table->no_sorting($question);
     }
-    $course_students = $bksb->getStudentsForCourse($course->id);
+    // Get students by group (if set)
+    if ($group != 0) {
+        $members = groups_get_members_by_role($group, $course->id, 'u.id, u.firstname, u.lastname, u.idnumber');
+        $course_students = $members[5]->users; // students are role '5'
+    } else {
+        $course_students = $bksb->getStudentsForCourse($course->id);
+    }
     $table->pagesize($perpage, count($course_students));
     $table->setup();
     $offset = $page * $perpage;
@@ -263,7 +276,7 @@ if ($user_id != 0) {
         echo '</td></tr>';
         echo '</table>';
     } else {
-        echo '<center><br /><p style="color:#000;"><strong>No students chose to do this level.</strong></p></center>';
+        echo '<center><br /><p style="color:#000;"><strong>No students chose to do this level or match this level of filtering.</strong></p></center>';
     }
 
     echo '<form name="options" action="'.$baseurl.'" method="post">';

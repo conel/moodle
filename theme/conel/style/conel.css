@@ -216,6 +216,7 @@ table.bksb_results td.cell {
 table.bksb_results td.fullname {
   white-space: nowrap;
 }
+/* BKSB */
 table.bksb_key {
   margin: 0 auto;
 }
@@ -225,4 +226,24 @@ table.centered_tds td {
 .initialbar strong {
   color: red;
   padding-right: 3px;
+}
+img.bksb_logo {
+  display: block;
+  margin: 0 auto;
+}
+.bksb_header {
+  text-align: center;
+}
+.bksb_header h2 span {
+  color: #ED1A31;
+}
+.bksb_header a {
+  color: #999999;
+}
+.bksb_header a:visited,
+.bksb_header a:hover {
+  color: #5D5D5D;
+}
+.bksb_header option[selected="selected"] {
+  color: #ED1A31 !important;
 }

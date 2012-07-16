@@ -12,7 +12,8 @@ $string['diagnostic_assessments'] = 'Diagnostic Assessments';
 $string['initial_assessment_overview'] = 'Initial Assessment Overview';
 $string['diagnostic_assessment_overview'] = 'Diagnostic Assessment Overview';
 
-/* Settings */
+
+/* BKSB Database Settings */
 $string['bksb_settings'] = 'BKSB Database Settings';
 
 $string['db_server'] = 'Database Server';
@@ -26,6 +27,23 @@ $string['set_db_user'] = 'Set database user';
 
 $string['db_password'] = 'Database Password';
 $string['set_db_password'] = 'Set database password';
+
+
+/* MIS Database Settings */
+$string['mis_settings'] = 'MIS Database Settings';
+
+$string['mis_db_server'] = 'Database Server';
+$string['mis_set_db_server'] = 'Set database server';
+
+$string['mis_db_name'] = 'Database Name';
+$string['mis_set_db_name'] = 'Set database name';
+
+$string['mis_db_user'] = 'Database User';
+$string['mis_set_db_user'] = 'Set database user';
+
+$string['mis_db_password'] = 'Database Password';
+$string['mis_set_db_password'] = 'Set database password';
+
 
 /* Stats */
 $string['bksb_stats'] = 'BKSB Statistics';

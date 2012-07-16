@@ -3,11 +3,12 @@
 require('../../config.php');
 require('BksbReporting.class.php');
 require($CFG->libdir.'/tablelib.php');
+require($CFG->dirroot . '/group/lib.php'); // Required to get group members
 $bksb = new BksbReporting();
 
 $user_id = optional_param('id', 0, PARAM_INT);
 $course_id = optional_param('course_id', 1, PARAM_INT);
-$group = optional_param('group', -1, PARAM_INT);
+$group = optional_param('group', 0, PARAM_INT);
 $updatepref = optional_param('updatepref', -1, PARAM_INT);
 
 if (!$course = $DB->get_record('course', array('id' => $course_id))) {
@@ -40,6 +41,9 @@ $PAGE->set_url($baseurl);
 
 echo $OUTPUT->header();
 
+// BKSB logo - branding
+echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo" width="261" height="52" class="bksb_logo" />';
+
 // User
 if ($user_id != 0) {
 
@@ -48,7 +52,7 @@ if ($user_id != 0) {
         $conel_id = $user->idnumber;
     }
 
-    echo '<div style="text-align:center;">';
+    echo '<div class="bksb_header">';
         echo "<h2>Initial Assessment for <span>$fullname</span></h2>";
         $profile_link = $CFG->wwwroot . "/user/profile.php?id=$user_id&amp;courseid=$course_id";
         echo '<a href="'.$profile_link.'" title="View Profile">'.$OUTPUT->user_picture($user, array('size'=>100)).'</a>';
@@ -113,9 +117,11 @@ if ($user_id != 0) {
             && !has_capability('moodle/site:accessallgroups', $context)
         );
 
-        print_heading('Initial Assessment Overview ('.$course->shortname.')');
+        echo '<div class="bksb_header">';
+        echo "<h2>Initial Assessment Overview (<a href=\"".$CFG->wwwroot."/course/view.php?id=".$course->id."\">".$course->shortname."</a>)</h2>";
         groups_print_course_menu($course, $baseurl); 
         echo '<br />';
+        echo '</div>';
 
         // Get BKSB Result categories
         $cols = array('picture', 'fullname');
@@ -142,7 +148,13 @@ if ($user_id != 0) {
         foreach($cats as $cat) {
             $table->no_sorting($cat);
         }
-        $course_students = $bksb->getStudentsForCourse($course->id);
+        // Get students by group (if set)
+        if ($group != 0) {
+            $members = groups_get_members_by_role($group, $course->id, 'u.id, u.firstname, u.lastname, u.idnumber');
+            $course_students = $members[5]->users; // students are role '5'
+        } else {
+            $course_students = $bksb->getStudentsForCourse($course->id);
+        }
         $table->pagesize($perpage, count($course_students));
         $table->setup();
         $offset = $page * $perpage;

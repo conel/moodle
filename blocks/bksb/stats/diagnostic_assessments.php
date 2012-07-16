@@ -31,6 +31,9 @@ $PAGE->set_url($baseurl);
 
 echo $OUTPUT->header();
 
+// BKSB logo - branding
+echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo" width="261" height="52" class="bksb_logo" />';
+
 // Get all BKSB groups
 $groups = $bksb->getBksbGroups();
 
@@ -64,10 +67,10 @@ if ($group != '') {
     }
     
     echo '<h1>'.$group.'</h1>';
-    echo "<p>Statistics from <strong>complete</strong> diagnostic overviews.</p>";
+    echo "<p>Statistics from <strong>complete</strong> diagnostic assessments.</p>";
     
     echo '<table>';
-    echo '<tr><td><strong>Complete Diagnostic Overviews:</strong></td><td>'.$user_count.'</td></tr>';
+    echo '<tr><td><strong>Complete Diagnostic Assessments:</strong></td><td>'.$user_count.'</td></tr>';
     echo '</table>';
     echo '<table style="float:left; margin-right:15px;">';
     echo '<tr><td><strong>English Entry 2:</strong></td><td> '.$users['total_literacy_e2'].'</td></tr>';

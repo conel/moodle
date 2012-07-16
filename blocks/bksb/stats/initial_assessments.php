@@ -22,13 +22,18 @@ if (has_capability('report/stats:view', $sitecontext) || has_capability('moodle/
 include('../BksbReporting.class.php');
 $bksb = new BksbReporting();
 
+$mis_server = get_config('block_bksb', 'mis_db_server');
+$mis_user = get_config('block_bksb', 'mis_db_user');
+$mis_password = get_config('block_bksb', 'mis_db_password');
+$mis_db = get_config('block_bksb', 'mis_db_name');
+
 // MIS connection
 include($CFG->dirroot.'/lib/adodb/adodb.inc.php');
 $mis = NewADOConnection('oci8');
 $mis->SetFetchMode(ADODB_FETCH_ASSOC);
 $mis->debug = false;
-$mis->NLS_DATE_FORMAT ='DD-MON-YYYY';
-$mis->Connect($CFG->mishost, $CFG->misuser, $CFG->mispassword, $CFG->misdatabase);
+$mis->NLS_DATE_FORMAT ='DD-MON-YYYY'; // required
+$mis->Connect($mis_server, $mis_user, $mis_password, $mis_db);
 
 $unix_start = '';
 $unix_end = '';
@@ -92,6 +97,9 @@ echo $OUTPUT->header();
 
 // Get all BKSB groups
 $groups = $bksb->getBksbGroups();
+
+// BKSB logo - branding
+echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo" width="261" height="52" class="bksb_logo" />';
 
 echo '<h2>Initial Assessment Statistics</h2>';
 
