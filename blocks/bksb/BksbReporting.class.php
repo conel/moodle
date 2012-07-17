@@ -702,7 +702,7 @@ class BksbReporting {
                     }
                     // bksb_GroupMembership
                     if ($user_exists[1] === TRUE) {
-                        $gm_query = sprintf("UPDATE dbo.bksb_GroupMembership SET UserName = '%d' WHERE UserName = '%s'", $user_match->idnumber, $user['username'];
+                        $gm_query = sprintf("UPDATE dbo.bksb_GroupMembership SET UserName = '%d' WHERE UserName = '%s'", $user_match->idnumber, $user['username']);
                         if (!$gm_result = $this->connection->execute($gm_query)) {
                             $this->errors[] = "Query failed: $gm_query";
                         }
@@ -765,7 +765,7 @@ class BksbReporting {
                     $query = sprintf("SELECT idnumber FROM mdl_user WHERE dob = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $dob, $postcode);
                 } else if ($dob != '' && $postcode == '') {
                     // Search on dob and firstname
-                    $query = sprintf("SELECT idnumber FROM mdl_user WHERE dob = '%s' AND LOWER(firstname) = '%s'", $dob, strtolower($user['firstname']);
+                    $query = sprintf("SELECT idnumber FROM mdl_user WHERE dob = '%s' AND LOWER(firstname) = '%s'", $dob, strtolower($user['firstname']));
                 } else if ($postcode == '' && $dob != '') {
                     // Search on postcode and firstname
                     $query = sprintf("SELECT idnumber FROM mdl_user WHERE LOWER(firstname) = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $user['firstname'], $postcode);
