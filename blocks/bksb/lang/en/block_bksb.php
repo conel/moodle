@@ -12,6 +12,7 @@ $string['diagnostic_assessments'] = 'Diagnostic Assessments';
 $string['initial_assessment_overview'] = 'Initial Assessment Overview';
 $string['diagnostic_assessment_overview'] = 'Diagnostic Assessment Overview';
 
+$string['pagesize'] = 'Students to show per page';
 
 /* BKSB Database Settings */
 $string['bksb_settings'] = 'BKSB Database Settings';

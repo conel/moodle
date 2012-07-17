@@ -25,16 +25,20 @@ class BksbReporting {
     public $ass_cats;
     public $ass_types;
     public $question_counts;
+    public $cache_life;
 
     public function __construct() {
 
         global $CFG;
 
-        $this->errors = array();
         $this->debug = true; // false by default
-        $this->createBKSBConnection();
+        $this->errors = array();
+        if ($this->connection == null) $this->createBKSBConnection();
         $this->num_queries = 0;
         $this->question_counts = array();
+
+        // TODO - Move cache life value to settings
+        $this->cache_life = 86400; // 1 day
 
         // array to hold table columns - ass cats
         $this->ass_cats = array(
@@ -93,7 +97,7 @@ class BksbReporting {
         // nkowald - 2012-01-03 - If username contains single quote: escape it
         $user_id = str_replace("'", "''", $user_id);
 
-        $query = "SELECT Result FROM dbo.bksb_IAResults WHERE UserName = '$user_id' ORDER BY DateCompleted DESC";
+        $query = sprintf("SELECT Result FROM dbo.bksb_IAResults WHERE UserName = '%s' ORDER BY DateCompleted DESC", $user_id);
         if ($result = $this->connection->execute($query)) {
             $this->num_queries++;
             while (!$result->EOF) {
@@ -102,7 +106,7 @@ class BksbReporting {
             }
             $result->Close();
         }
-        $query = "SELECT WordProcessing, Spreadsheets, Databases, DesktopPublishing, Presentation, Email, General, Internet FROM dbo.bksb_ICTIAResults WHERE UserName = '$user_id' ORDER BY session_id DESC";
+        $query = sprintf("SELECT WordProcessing, Spreadsheets, Databases, DesktopPublishing, Presentation, Email, General, Internet FROM dbo.bksb_ICTIAResults WHERE UserName = '%s' ORDER BY session_id DESC", $user_id);
         if ($result = $this->connection->execute($query)) {
             $this->num_queries++;
             while (!$result->EOF) {
@@ -243,7 +247,7 @@ class BksbReporting {
             return false;
         }
         $assessment = $this->ass_types[$assessment_no];
-        $query = "SELECT curric_ref, TrackingComment FROM dbo.vw_student_curric_bestScoreAndComment WHERE Assessment = '$assessment' AND userName = '$user_id'";
+        $query = sprintf("SELECT curric_ref, TrackingComment FROM dbo.vw_student_curric_bestScoreAndComment WHERE Assessment = '%s' AND userName = '%d'", $assessment, $user_id);
 
         if ($result = $this->connection->execute($query)) {
             $this->num_queries++;
@@ -261,7 +265,7 @@ class BksbReporting {
             $refs_csv = "'" . $refs_csv . "'";
             // Get correct order for all curric_refs
             $ordered_results = array();
-            $query = "SELECT curric_ref, Title, report_pos FROM dbo.bksb_CurricCodes WHERE curric_ref IN ($refs_csv) ORDER BY report_pos ASC";
+            $query = sprintf("SELECT curric_ref, Title, report_pos FROM dbo.bksb_CurricCodes WHERE curric_ref IN (%s) ORDER BY report_pos ASC", $refs_csv);
             if ($result = $this->connection->execute($query)) {
                 $this->num_queries++;
                 while (!$result->EOF) {
@@ -564,7 +568,7 @@ class BksbReporting {
         if ($username != '') {
 
             // bksb_Users check
-            $query1 = "SELECT userName FROM dbo.bksb_Users WHERE userName = '$username'";
+            $query1 = sprintf("SELECT userName FROM dbo.bksb_Users WHERE userName = '%s'", $username);
             if ($result1 = $this->connection->execute($query1)) {
                 $this->num_queries++;
                 $user_found = '';
@@ -579,7 +583,7 @@ class BksbReporting {
             }
             
             // bksb_GroupMembership check
-            $query2 = "SELECT UserName FROM dbo.bksb_GroupMembership WHERE UserName = '$username'";
+            $query2 = sprintf("SELECT UserName FROM dbo.bksb_GroupMembership WHERE UserName = '%s'", $username);
             if ($result2 = $this->connection->execute($query2)) {
                 $this->num_queries++;
                 $user_found = '';
@@ -594,7 +598,7 @@ class BksbReporting {
             }
             
             // bksb_IAResults check
-            $query3 = "SELECT UserName FROM dbo.bksb_IAResults WHERE UserName = '$username'";
+            $query3 = sprintf("SELECT UserName FROM dbo.bksb_IAResults WHERE UserName = '%s'", $username);
             if ($result3 = $this->connection->execute($query3)) {
                 $this->num_queries++;
                 $user_found = '';
@@ -609,7 +613,7 @@ class BksbReporting {
             }
             
             // bksb_ICTIAResults check
-            $query4 = "SELECT UserName FROM dbo.bksb_ICTIAResults WHERE UserName = '$username'";
+            $query4 = sprintf("SELECT UserName FROM dbo.bksb_ICTIAResults WHERE UserName = '%s'", $username);
             if ($result4 = $this->connection->execute($query4)) {
                 $this->num_queries++;
                 $user_found = '';
@@ -624,7 +628,7 @@ class BksbReporting {
             }
             
             // bksb_Sessions check
-            $query5 = "SELECT userName FROM dbo.bksb_Sessions WHERE userName = '$username'";
+            $query5 = sprintf("SELECT userName FROM dbo.bksb_Sessions WHERE userName = '%s'", $username);
             if ($result5 = $this->connection->execute($query5)) {
                 $this->num_queries++;
                 $user_found = '';
@@ -688,7 +692,7 @@ class BksbReporting {
                     // bksb_Users
                     if ($user_exists[0] === TRUE) {
                         // Handle duplicate users - If a valid idnumber is found already in BKSB, skip updating this incorrect ID
-                        $query = "UPDATE dbo.bksb_Users SET userName = '".$user_match->idnumber."' WHERE (user_id = '".$user['id']."')";
+                        $query = sprintf("UPDATE dbo.bksb_Users SET userName = '%d' WHERE (user_id = '%d')", $user_match->idnumber, $user['id']);
                         if (!$result = $this->connection->execute($query)) {
                             $this->errors[] = "Query failed: $query";
                         }
@@ -698,7 +702,7 @@ class BksbReporting {
                     }
                     // bksb_GroupMembership
                     if ($user_exists[1] === TRUE) {
-                        $gm_query = "UPDATE dbo.bksb_GroupMembership SET UserName = '".$user_match->idnumber."' WHERE UserName = '".$user['username']."'";
+                        $gm_query = sprintf("UPDATE dbo.bksb_GroupMembership SET UserName = '%d' WHERE UserName = '%s'", $user_match->idnumber, $user['username'];
                         if (!$gm_result = $this->connection->execute($gm_query)) {
                             $this->errors[] = "Query failed: $gm_query";
                         }
@@ -707,7 +711,7 @@ class BksbReporting {
                     }
                     // bksb_IAResults
                     if ($user_exists[2] === TRUE) {
-                        $ia_query = "UPDATE dbo.bksb_IAResults SET UserName = '".$user_match->idnumber."' WHERE UserName = '".$user['username']."'";
+                        $ia_query = sprintf("UPDATE dbo.bksb_IAResults SET UserName = '%d' WHERE UserName = '%s'", $user_match->idnumber, $user['username']);
                         if (!$ia_result = $this->connection->execute($ia_query)) {
                             $this->errors[] = "Query failed: $ia_query";
                         }
@@ -716,7 +720,7 @@ class BksbReporting {
                     }
                     // bksb_ICTIAResults
                     if ($user_exists[3] === TRUE) {
-                        $ictia_query = "UPDATE dbo.bksb_ICTIAResults SET UserName = '".$user_match->idnumber."' WHERE UserName = '".$user['username']."'";
+                        $ictia_query = sprintf("UPDATE dbo.bksb_ICTIAResults SET UserName = '%d' WHERE UserName = '%d'", $user_match->idnumber, $user['username']);
                         if (!$ictia_result = $this->connection->execute($ictia_query)) {
                             $this->errors[] = "Query failed: $ictia_query";
                         }
@@ -725,7 +729,7 @@ class BksbReporting {
                     }
                     // bksb_Sessions
                     if ($user_exists[4] === TRUE) {
-                        $sess_query = "UPDATE dbo.bksb_Sessions SET userName = '".$user_match->idnumber."' WHERE userName = '".$user['username']."'";
+                        $sess_query = sprintf("UPDATE dbo.bksb_Sessions SET userName = '%d' WHERE userName = '%s'", $user_match->idnumber, $user['username']);
                         if (!$sess_result = $this->connection->execute($sess_query)) {
                             $this->errors[] = "Query failed: $sess_query";
                         }
@@ -758,13 +762,13 @@ class BksbReporting {
                 // If both postcode and dob exists, this is enough info to search for a match
                 $query = '';
                 if ($postcode != '' && $dob != '') {
-                    $query = "SELECT idnumber FROM mdl_user WHERE dob = '$dob' AND REPLACE(postcode, ' ', '') = '".$postcode."'";
+                    $query = sprintf("SELECT idnumber FROM mdl_user WHERE dob = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $dob, $postcode);
                 } else if ($dob != '' && $postcode == '') {
                     // Search on dob and firstname
-                    $query = "SELECT idnumber FROM mdl_user WHERE dob = '$dob' AND LOWER(firstname) = '".strtolower($user['firstname'])."'";
+                    $query = sprintf("SELECT idnumber FROM mdl_user WHERE dob = '%s' AND LOWER(firstname) = '%s'", $dob, strtolower($user['firstname']);
                 } else if ($postcode == '' && $dob != '') {
                     // Search on postcode and firstname
-                    $query = "SELECT idnumber FROM mdl_user WHERE LOWER(firstname) = '".strtolower($user['firstname'])."' AND REPLACE(postcode, ' ', '') = '".$postcode."'";
+                    $query = sprintf("SELECT idnumber FROM mdl_user WHERE LOWER(firstname) = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $user['firstname'], $postcode);
                 }
                 
                 $student_id = '';
@@ -787,7 +791,7 @@ class BksbReporting {
                     // bksb_Users
                     if ($user_exists[0] === TRUE) {
                         // Handle duplicate users - If a valid idnumber is found already in BKSB, skip updating this incorrect ID
-                        $query = "UPDATE dbo.bksb_Users SET userName = '$user_match_idnumber' WHERE (user_id = '".$user['id']."')";
+                        $query = sprintf("UPDATE dbo.bksb_Users SET userName = '%d' WHERE (user_id = '%d')", $user_match_idnumber, $user['id']);
                         if (!$result = $this->connection->execute($query)) {
                             $this->errors[] = "Query failed: $query";
                         }
@@ -796,7 +800,7 @@ class BksbReporting {
                     }
                     // bksb_GroupMembership
                     if ($user_exists[1] === TRUE) {
-                        $gm_query = "UPDATE dbo.bksb_GroupMembership SET UserName = '$user_match_idnumber' WHERE UserName = '".$user['username']."'";
+                        $gm_query = sprintf("UPDATE dbo.bksb_GroupMembership SET UserName = '%d' WHERE UserName = '%s'", $user_match_idnumber, $user['username']);
                         if (!$gm_result = $this->connection->execute($gm_query)) {
                             $this->errors[] = "Query failed: $gm_query";
                         }
@@ -805,7 +809,7 @@ class BksbReporting {
                     }
                     // bksb_IAResults
                     if ($user_exists[2] === TRUE) {
-                        $ia_query = "UPDATE dbo.bksb_IAResults SET UserName = '$user_match_idnumber' WHERE UserName = '".$user['username']."'";
+                        $ia_query = sprintf("UPDATE dbo.bksb_IAResults SET UserName = '%d' WHERE UserName = '%s'", $user_match_idnumber, $user['username']);
                         if (!$ia_result = $this->connection->execute($ia_query)) {
                             $this->errors[] = "Query failed: $ia_query";
                         }
@@ -814,7 +818,7 @@ class BksbReporting {
                     }
                     // bksb_ICTIAResults
                     if ($user_exists[3] === TRUE) {
-                        $ictia_query = "UPDATE dbo.bksb_ICTIAResults SET UserName = '$user_match_idnumber' WHERE UserName = '".$user['username']."'";
+                        $ictia_query = sprintf("UPDATE dbo.bksb_ICTIAResults SET UserName = '%d' WHERE UserName = '%s'", $user_match_idnumber, $user['username']);
                         if (!$ictia_result = $this->connection->execute($ictia_query)) {
                             $this->errors[] = "Query failed: $ictia_query";
                         }
@@ -823,7 +827,7 @@ class BksbReporting {
                     }
                     // bksb_Sessions
                     if ($user_exists[4] === TRUE) {
-                        $sess_query = "UPDATE dbo.bksb_Sessions SET userName = '$user_match_idnumber' WHERE userName = '".$user['username']."'";
+                        $sess_query = sprintf("UPDATE dbo.bksb_Sessions SET userName = '%d' WHERE userName = '%s'", $user_match_idnumber, $user['username']);
                         if (!$sess_result = $this->connection->execute($sess_query)) {
                             $this->errors[] = "Query failed: $sess_query";
                         }
@@ -868,11 +872,11 @@ class BksbReporting {
         
         // if firstname is given and lastname given
         if ($firstname != '' && $lastname != '') {
-            $query = "SELECT user_id, userName, FirstName, LastName, DOB, PostcodeA as Postcode FROM dbo.bksb_Users WHERE FirstName = '$firstname' AND LastName = '$lastname' ORDER BY FirstName ASC";	
+            $query = sprintf("SELECT user_id, userName, FirstName, LastName, DOB, PostcodeA as Postcode FROM dbo.bksb_Users WHERE FirstName = '%s' AND LastName = '%s' ORDER BY FirstName ASC", $firstname, $lastname);	
         } else if ($firstname != '' && $lastname == '') {
-            $query = "SELECT user_id, userName, FirstName, LastName, DOB, PostcodeA as Postcode FROM dbo.bksb_Users WHERE FirstName = '$firstname' ORDER BY FirstName ASC";	
+            $query = sprintf("SELECT user_id, userName, FirstName, LastName, DOB, PostcodeA as Postcode FROM dbo.bksb_Users WHERE FirstName = '%s' ORDER BY FirstName ASC", $firstname);	
         } else if ($firstname == '' && $lastname != '') {
-            $query = "SELECT user_id, userName, FirstName, LastName, DOB, PostcodeA as Postcode FROM dbo.bksb_Users WHERE LastName = '$lastname' ORDER BY LastName ASC";	
+            $query = sprintf("SELECT user_id, userName, FirstName, LastName, DOB, PostcodeA as Postcode FROM dbo.bksb_Users WHERE LastName = '%s' ORDER BY LastName ASC", $lastname);
         } else {
             if (in_array($order_field, $valid_orders)) {
                 $order = "$order_field ASC";
@@ -943,7 +947,7 @@ class BksbReporting {
     public function getDiagnosticOverviewsForGroup($group_name='') {
     
         if ($group_name != '') {
-            $query = "SELECT DISTINCT userName FROM dbo.bksb_Sessions WHERE (assessment_id IN (SELECT ass_ref FROM dbo.bksb_Assessments WHERE ([assessment group] = 1))) AND (userName IN (SELECT UserName FROM dbo.bksb_GroupMembership WHERE (group_id = '".$group_name."') AND status='Complete') ) ORDER BY userName";
+            $query = sprintf("SELECT DISTINCT userName FROM dbo.bksb_Sessions WHERE (assessment_id IN (SELECT ass_ref FROM dbo.bksb_Assessments WHERE ([assessment group] = 1))) AND (userName IN (SELECT UserName FROM dbo.bksb_GroupMembership WHERE (group_id = '%s') AND status='Complete') ) ORDER BY userName", $group_name);
             
             if ($result = $this->connection->execute($query)) {
                     $this->num_queries++;
@@ -962,7 +966,7 @@ class BksbReporting {
                         //$user_diag[$username]['status'] = $result->fields['status']->value;				
                         
                         // Add Level
-                        $ass_query = "SELECT DISTINCT Assessment FROM dbo.vw_student_curric_bestScoreAndComment WHERE (userName = '$username')";
+                        $ass_query = sprintf("SELECT DISTINCT Assessment FROM dbo.vw_student_curric_bestScoreAndComment WHERE (userName = '%s')", $username);
                         if ($result_ass = $this->connection->execute($ass_query)) {
                             $this->num_queries++;
                             while (!$result_ass->EOF) {
@@ -1101,12 +1105,7 @@ class BksbReporting {
                 $sdt_start = date('m/d/Y H:i:s', $unix_start);
                 $sdt_end = date('m/d/Y H:i:s', $unix_end);
                 
-                $query = sprintf("SELECT session_id 
-                    FROM bksb_Sessions 
-                    WHERE (status = 'Complete') 
-                    AND (dateCreated >= '%s') 
-                    AND (dateCreated <= '%s') 
-                    AND userName IN (%s)",
+                $query = sprintf("SELECT session_id FROM bksb_Sessions WHERE (status = 'Complete') AND (dateCreated >= '%s') AND (dateCreated <= '%s') AND userName IN (%s)",
                     $sdt_start,
                     $sdt_end,
                     $group_users
@@ -1380,7 +1379,7 @@ class BksbReporting {
             foreach ($duplicate_users as $user) {
 
                 // Check for valid user records existing with this valid $new_username username - we don't want to create duplicate user records
-                $query2 = "SELECT user_id, userName, FirstName, LastName FROM dbo.bksb_Users WHERE userName = '".$user['username']."' ORDER BY user_id DESC";
+                $query2 = sprintf("SELECT user_id, userName, FirstName, LastName FROM dbo.bksb_Users WHERE userName = '%s' ORDER BY user_id DESC", $user['username']);
             
                 if ($result = $this->connection->execute($query2)) {
                     $this->num_queries++;
@@ -1410,7 +1409,7 @@ class BksbReporting {
                     // Remove duplicates
                     
                     foreach ($delete_ids as $id) {
-                        $query = "DELETE FROM dbo.bksb_Users WHERE user_id = '$id'";
+                        $query = sprintf("DELETE FROM dbo.bksb_Users WHERE user_id = '%d'", $id);
                         if ($result = $this->connection->execute($query)) {
                             $this->num_queries++;
                             $no_dupes_deleted++;
@@ -1601,18 +1600,32 @@ class BksbReporting {
         return $param;
     }
 
+    public function filterStudentsByName(Array $students) {
+        $first_initial = (isset($_GET['tifirst']) && $_GET['tifirst'] != '' && ctype_alpha($_GET['tifirst'])) ? $_GET['tifirst'] : '';
+        $last_initial = (isset($_GET['tilast']) && $_GET['tilast'] != '' && ctype_alpha($_GET['tilast'])) ? $_GET['tilast'] : '';
+        // No name filters set: return untouched
+        if ($first_initial == '' && $last_initial == '') return $students;
+
+        $filtered = array();
+        foreach ($students as $student) {
+            if ($first_initial != '' && strtolower($student->firstname[0]) != strtolower($first_initial)) {
+                continue;
+            }
+            if ($last_initial != '' && strtolower($student->lastname[0]) != strtolower($last_initial)) {
+                continue; 
+            }
+            $filtered[] = $student;
+        }
+        return $filtered;
+    }
+
     public function getStudentsForCourse($course_id) {
         global $DB, $CFG;
 
-        $firstname = (isset($_GET['tifirst']) && $_GET['tifirst'] != '' && ctype_alpha($_GET['tifirst'])) ? $_GET['tifirst'] : '';
-        $lastname = (isset($_GET['tilast']) && $_GET['tilast'] != '' && ctype_alpha($_GET['tilast'])) ? $_GET['tilast'] : '';
-
         $context = get_context_instance(CONTEXT_COURSE, $course_id);
-        $query = sprintf("SELECT u.id, u.firstname, u.lastname, u.idnumber FROM ".$CFG->prefix."user AS u, ".$CFG->prefix."role_assignments AS a WHERE contextid=%d AND roleid=%d AND a.userid=u.id AND u.idnumber != '' AND u.firstname LIKE ('%s%%') AND u.lastname LIKE ('%s%%')", 
+        $query = sprintf("SELECT u.id, u.firstname, u.lastname, u.idnumber FROM ".$CFG->prefix."user AS u, ".$CFG->prefix."role_assignments AS a WHERE contextid=%d AND roleid=%d AND a.userid=u.id AND u.idnumber != ''", 
             $context->id, 
-            5,
-            $firstname,
-            $lastname
+            5
         );
 
         $students = $DB->get_records_sql($query); 
@@ -1632,6 +1645,8 @@ class BksbReporting {
             }
             $c++;
         }
+        // check for name filters
+        $students = $this->filterStudentsByName($students);
         return $students;
     }
 
@@ -1668,7 +1683,10 @@ class BksbReporting {
         $this->connection->Close();
 
         if ($this->debug === true) {
-            echo '<p><strong>Number of SQL queries: ' . $this->num_queries . '</strong></p>';
+            echo '<div class="debugging">';
+            echo '<h2>Debugging</h2>';
+            echo '<p><strong>Number of SQL queries:</strong> ' . $this->num_queries . '</p>';
+            if (xdebug_is_enabled()) echo '<p><strong>Time taken:</strong> ' . xdebug_time_index() . '</p>';
 
             if (count($this->errors) > 0) {
                 echo '<div style="color:red;">';
@@ -1680,6 +1698,7 @@ class BksbReporting {
                 echo '</ul>';
                 echo '</div>';
             }
+            echo '</div>';
         }
 
         $this->errors[] = array();

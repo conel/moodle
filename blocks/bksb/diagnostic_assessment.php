@@ -2,6 +2,8 @@
 
 require('../../config.php');
 require('BksbReporting.class.php');
+// To use caching, create a 'bksb' directory inside MoodleData/cache
+include('Cache.class.php');
 require($CFG->libdir.'/tablelib.php');
 require($CFG->dirroot . '/group/lib.php'); // Required to get group members
 $bksb = new BksbReporting();
@@ -35,7 +37,7 @@ if ($course_id != 1) {
     $PAGE->navigation->extend_for_user($USER);
     //$PAGE->set_pagelayout('user');
 }
-$title = 'BKSB - Diagnostic Assessment Overviews';
+$title = 'BKSB - Diagnostic Assessment Overview';
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 $PAGE->set_url($baseurl);
@@ -53,88 +55,102 @@ if ($user_id != 0) {
         $conel_id = $user->idnumber;
     }
 
-    echo '<div class="bksb_header">';
-        echo "<h2>Diagnostic Assessment Overview for <span>$fullname</span></h2>";
-        echo $OUTPUT->user_picture($user, array('size'=>100));
-        echo '<br /><br />';
-    echo '</div>';
+    $header = '<div class="bksb_header">';
+    $header .= "<h2>Diagnostic Assessment Overview for <span>$fullname</span></h2>";
+    $header .= $OUTPUT->user_picture($user, array('size'=>100));
+    $header .= '<br /><br />';
+    $header .= '</div>';
 
-    $best_scores = $bksb->getBestScores($conel_id);
-    $user_sessions = $bksb->getBksbDiagSessions($conel_id);
-    $existing_diagnostics = $bksb->filterAssessmentsFromSessions($user_sessions);
+    // Return from cache if set
+    Cache::init('user-'.$user_id.'-da-html.cache', $bksb->cache_life); // cache for 1 day
+    if (Cache::cacheFileExists()) {
+        $table_html = Cache::getCache();
+    } else {
+        $best_scores = $bksb->getBestScores($conel_id);
+        $user_sessions = $bksb->getBksbDiagSessions($conel_id);
+        $existing_diagnostics = $bksb->filterAssessmentsFromSessions($user_sessions);
 
-    $results_found = false;
+        $results_found = false;
 
-    foreach ($existing_diagnostics as $ass_no => $ass_type) {
+        ob_start();
+        echo $header;
+        foreach ($existing_diagnostics as $ass_no => $ass_type) {
 
-        $bksb_results = $bksb->getDiagnosticResults($conel_id, $ass_no, $best_scores);
-        if ($bksb_results === false) continue;
+            $bksb_results = $bksb->getDiagnosticResults($conel_id, $ass_no, $best_scores);
+            if ($bksb_results === false) continue;
 
-        $results_found = true;
+            $results_found = true;
 
-        print_heading($ass_type . ' Assessment');
+            print_heading('<span>'.$ass_type.'</span> Assessment');
 
-        // Create array of questions for num returned
-        $questions = range(1, count($bksb_results));
-        // nkowald - 2010-10-05 - Add question % column
-        $questions[] = 'BKSB %';
-        
-        $tablecolumns = $questions;
-        $tableheaders = $questions;
-
-        $table = new flexible_table('bksb_do');
-                        
-        $table->define_columns($tablecolumns);
-        $table->define_headers($tableheaders);
-        $table->define_baseurl($baseurl);
-        $table->collapsible(false);
-        $table->initialbars(false);
-        $table->set_attribute('cellspacing', '0');
-        $table->set_attribute('id', 'bksb_results_' . $ass_no);
-        $table->set_attribute('class', 'bksb_results');
-        $table->set_attribute('width', '95%');
-        $table->set_attribute('align', 'center');
-        foreach ($questions as $question) {
-            $table->no_sorting($question);
-        }
+            // Create array of questions for num returned
+            $questions = range(1, count($bksb_results));
+            // nkowald - 2010-10-05 - Add question % column
+            $questions[] = 'BKSB %';
             
-        $table->setup();
-        $diag_results = array();
-        foreach ($bksb_results as $res) {
-            $diag_results[] = $bksb->getHTMLResult($res[1]);
-        }
+            $tablecolumns = $questions;
+            $tableheaders = $questions;
+
+            $table = new flexible_table('bksb_do');
+                            
+            $table->define_columns($tablecolumns);
+            $table->define_headers($tableheaders);
+            $table->define_baseurl($baseurl);
+            $table->collapsible(false);
+            $table->initialbars(false);
+            $table->set_attribute('cellspacing', '0');
+            $table->set_attribute('id', 'bksb_results_' . $ass_no);
+            $table->set_attribute('class', 'bksb_results');
+            $table->set_attribute('width', '95%');
+            $table->set_attribute('align', 'center');
+            foreach ($questions as $question) {
+                $table->no_sorting($question);
+            }
+                
+            $table->setup();
+            $diag_results = array();
+            foreach ($bksb_results as $res) {
+                $diag_results[] = $bksb->getHTMLResult($res[1]);
+            }
+                
+            $bksb_session_id = isset($user_sessions[$ass_type]) ? $user_sessions[$ass_type] : 0;
+            $percentage = $bksb->getBksbPercentage($bksb_session_id);
             
-        $bksb_session_id = isset($user_sessions[$ass_type]) ? $user_sessions[$ass_type] : 0;
-        $percentage = $bksb->getBksbPercentage($bksb_session_id);
-        
-        $bksb_results_url = 'http://bksb/bksb_Reporting/Reports/DiagReport.aspx?session='.$bksb_session_id;	
-        $diag_results[] = '<span style="white-space:nowrap";>'.$percentage.'%<br /><a href="'.$bksb_results_url.'" class="percentage_link" title="Go to BKSB results page" target="_blank">View on BKSB</a></span>';
-        
-        $table->add_data($diag_results);
+            $bksb_results_url = 'http://bksb/bksb_Reporting/Reports/DiagReport.aspx?session='.$bksb_session_id;	
+            $diag_results[] = '<span style="white-space:nowrap";>'.$percentage.'%<br /><a href="'.$bksb_results_url.'" class="percentage_link" title="Go to BKSB results page" target="_blank">View on BKSB</a></span>';
+            
+            $table->add_data($diag_results);
 
-        $table->print_html();  // Print the table
+            $table->print_html();  // Print the table
 
-        $overviews = $bksb->getAssDetails($ass_no);
-        echo '<table class="bksb_key" width="95%">';
-        echo '<tr><td>';
+            $overviews = $bksb->getAssDetails($ass_no);
+            echo '<table class="bksb_key" width="95%">';
+            echo '<tr><td>';
 
-        echo "<h5>Questions</h5>";
-        echo "<ol>";
-        foreach ($overviews as $overview) {
-            echo "<li>".$overview[0]."<span style=\"color:#CCC;\"> &mdash; ".$overview[1]."</span></li>";
+            echo "<h5>Questions</h5>";
+            echo "<ol>";
+            foreach ($overviews as $overview) {
+                echo "<li>".$overview[0]."<span style=\"color:#CCC;\"> &mdash; ".$overview[1]."</span></li>";
+            }
+            echo "</ol>";
+            echo '</td></tr>';
+            echo '</table>';
+
+        } // foreach
+
+        if ($results_found == false) {
+            echo '<center><p><b>No diagnostic overviews for this student.</b></p></center>';
         }
-        echo "</ol>";
-        echo '</td></tr>';
-        echo '</table>';
+        echo '<br />';
 
-    } // foreach
-
-    if ($results_found == false) {
-        echo '<center><p><b>No diagnostic overviews for this student.</b></p></center>';
+        $table_html = ob_get_contents();
+        ob_end_clean();
+        Cache::setCache($table_html);
     }
-    echo '<br />';
 
-} else if ($course_id and $access_isteacher and $course->id != $SITE->id) {
+    echo $table_html;
+
+} else if ($course_id && $access_isteacher && $course->id != $SITE->id) {
 
     $context = get_context_instance(CONTEXT_COURSE, $course->id);
     
@@ -227,70 +243,86 @@ if ($user_id != 0) {
     $table->setup();
     $offset = $page * $perpage;
     $students = $bksb->filterStudentsByPage($course_students, $offset, $perpage);
+    $no_students = count($students);
 
     $records_found = false;
 
-    if (count($students > 0)) {
+    if ($no_students > 0) {
         foreach ($students as $student) {
-            $user_sessions = $bksb->getBksbDiagSessions($student->idnumber);
-            $best_scores = $bksb->getBestScores($student->idnumber);
-            $bksb_results = $bksb->getDiagnosticResults($student->idnumber, $ass_no, $best_scores);
-            if ($bksb_results === false) continue;
 
-            $records_found = true;
-            
-            $picture = $OUTPUT->user_picture($student, array('size'=>40));
-            $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/diagnostic_assessment.php?course_id='.$course_id.'&amp;id='.$student->id.'" title="View all assessments for '.fullname($student).'">'.fullname($student).'</a>';
-            $col_row = array($picture, $name_html);
+            Cache::init('user-'.$student->idnumber.'-da-results-'.$ass_no.'.cache', $bksb->cache_life);
+            if (Cache::cacheFileExists()) {
+                $row = Cache::getCache();
+                $records_found = true;
+            } else {
+                $user_sessions = $bksb->getBksbDiagSessions($student->idnumber);
+                $best_scores = $bksb->getBestScores($student->idnumber);
+                $bksb_results = $bksb->getDiagnosticResults($student->idnumber, $ass_no, $best_scores);
+                if ($bksb_results === false) continue;
 
-            $diag_results = array();
-            foreach ($bksb_results as $res) {
-                $diag_results[] = $bksb->getHTMLResult($res[1]);
+                $records_found = true;
+                
+                $picture = $OUTPUT->user_picture($student, array('size'=>40));
+                $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/diagnostic_assessment.php?course_id='.$course_id.'&amp;id='.$student->id.'" title="View all assessments for '.fullname($student).'">'.fullname($student).'</a>';
+                $col_row = array($picture, $name_html);
+
+                $diag_results = array();
+                foreach ($bksb_results as $res) {
+                    $diag_results[] = $bksb->getHTMLResult($res[1]);
+                }
+                $bksb_session_id = isset($user_sessions[$ass_type]) ? $user_sessions[$ass_type] : 0;
+                $percentage = $bksb->getBksbPercentage($bksb_session_id);
+                $bksb_results_url = 'http://bksb/bksb_Reporting/Reports/DiagReport.aspx?session='.$bksb_session_id;
+                
+                $diag_results[] = '<span style="white-space:nowrap";>'.$percentage.'%<br /><a href="'.$bksb_results_url.'" class="percentage_link" title="Go to BKSB results page" target="_blank">View on BKSB</a></span>';
+                $row = array_merge($col_row, $diag_results);
+                Cache::setCache($row);
             }
-            $bksb_session_id = isset($user_sessions[$ass_type]) ? $user_sessions[$ass_type] : 0;
-            $percentage = $bksb->getBksbPercentage($bksb_session_id);
-            $bksb_results_url = 'http://bksb/bksb_Reporting/Reports/DiagReport.aspx?session='.$bksb_session_id;
-            
-            $diag_results[] = '<span style="white-space:nowrap";>'.$percentage.'%<br /><a href="'.$bksb_results_url.'" class="percentage_link" title="Go to BKSB results page" target="_blank">View on BKSB</a></span>';
-            
-            $row = array_merge($col_row, $diag_results);
+
             $table->add_data($row);
         }
-        $table->print_html();  // Print the table
     }
+    $table->print_html();  // Print the table
 
     if ($records_found == true) {
-        $overviews = $bksb->getAssDetails($ass_no);
-        echo '<table class="bksb_key" width="95%">';
-        echo '<tr><td>';
-        echo "<h5>Questions</h5>";
-        echo "<ol>";
-        foreach ($overviews as $overview) {
-            if ($overview[0] != $overview[1]) {
-                echo "<li>".$overview[0]."<span style=\"color:#CCC;\"> &mdash; ".$overview[1]."</span></li>";
-            } else {
-                echo "<li>".$overview[0]."</li>";
+        Cache::init('da-questions-'.$ass_no.'.cache', 1209600); // two weeks
+        if (Cache::cacheFileExists()) {
+            $q_html = Cache::getCache();
+        } else {
+            $q_html = '<table class="bksb_key" width="95%">';
+            $q_html .= '<tr><td>';
+            $q_html .= "<h5>Questions</h5>";
+            $q_html .= "<ol>";
+            $overviews = $bksb->getAssDetails($ass_no);
+            foreach ($overviews as $overview) {
+                if ($overview[0] != $overview[1]) {
+                    $q_html .= "<li>".$overview[0]."<span style=\"color:#CCC;\"> &mdash; ".$overview[1]."</span></li>";
+                } else {
+                    $q_html .= "<li>".$overview[0]."</li>";
+                }
             }
+            $q_html .= "</ol>";
+            $q_html .= '</td></tr>';
+            $q_html .= '</table>';
+            Cache::setCache($q_html);
         }
-        echo "</ol>";
-        echo '</td></tr>';
-        echo '</table>';
+        echo $q_html;
     } else {
-        echo '<center><br /><p style="color:#000;"><strong>No students chose to do this level or match this level of filtering.</strong></p></center>';
+        echo '<center><br /><p style="color:#000;"><strong>No diagnostic assessment results for this course or filtering.</strong></p></center>';
     }
 
-    echo '<form name="options" action="'.$baseurl.'" method="post">';
-    echo '<input type="hidden" id="updatepref" name="updatepref" value="1" />';
-    echo '<table id="optiontable" align="center">';
-    echo '<tr align="right"><td><label for="perpage">Per page:</label></td>';
-    echo '<td align="left">';
-    echo '<input type="text" id="perpage" name="perpage" size="1" value="'.$perpage.'" />';
-    echo '</td></tr>';
-    echo '<tr>';
-    echo '<td colspan="2" align="right">';
-    echo '<input type="submit" value="'.get_string('savepreferences').'" />';
-    echo '</td></tr></table>';
-    echo '</form>';
+    $per_html = '<form name="options" action="'.$baseurl.'" method="post">';
+    $per_html .= '<input type="hidden" id="updatepref" name="updatepref" value="1" />';
+    $per_html .= '<table id="optiontable" align="center">';
+    $per_html .= '<tr align="right"><td><label for="perpage">Per page:</label></td>';
+    $per_html .= '<td align="left">';
+    $per_html .= '<input type="text" id="perpage" name="perpage" size="1" value="'.$perpage.'" />';
+    $per_html .= '</td></tr>';
+    $per_html .= '<tr>';
+    $per_html .= '<td colspan="2" align="right">';
+    $per_html .= '<input type="submit" value="'.get_string('savepreferences').'" />';
+    $per_html .= '</td></tr></table></form>';
+    echo $per_html;
 
     /*
     $courses = enrol_get_my_courses($USER->id); // should be courses i can teach in
@@ -302,7 +334,7 @@ if ($user_id != 0) {
         }
         echo '</div>';
     }
-     */
+    */
 }
 
 echo $OUTPUT->footer();
