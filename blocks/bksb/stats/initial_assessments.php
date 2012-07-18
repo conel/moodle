@@ -13,9 +13,7 @@ $ey = optional_param('ey', '', PARAM_INT);
 require_login();
 
 $sitecontext = get_context_instance(CONTEXT_SYSTEM);
-if (has_capability('report/stats:view', $sitecontext) || has_capability('moodle/site:config', $sitecontext)) {
-    // Has access
-} else {
+if (!has_capability('block/bksb:view_statistics', $sitecontext)) {
     error("You do not have permission to view this page", $CFG->wwwroot);
 }
 

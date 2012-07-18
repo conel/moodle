@@ -26,10 +26,10 @@ require_login($course);
 $params = $bksb->getDistinctParams();
 $baseurl = $CFG->wwwroot.'/blocks/bksb/diagnostic_assessment.php' . $params;
 
-// TODO - change! - Needs some sort of is teacher or admin capability
-$access_isteacher = true;
+$access_is_teacher = has_capability('block/bksb:view_all_results', $coursecontext);
+$access_is_student = has_capability('block/bksb:view_own_results', $coursecontext);
 
-if ($course_id != 1) {
+if ($course_id != SITEID) {
     $PAGE->set_context($coursecontext);
     //$PAGE->set_pagelayout('course');
 } else if ($user_id != 0) {
@@ -47,8 +47,12 @@ echo $OUTPUT->header();
 // BKSB logo - branding
 echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo" width="261" height="52" class="bksb_logo" />';
 
-// User
+// Single User Results
 if ($user_id != 0) {
+
+    if ($access_is_student === false) { 
+        error("You don't have permission to view this user's results");
+    }
 
     if ($user = $DB->get_record('user', array('id' => $user_id), 'id, idnumber, firstname, lastname')) {
         $fullname = fullname($user);
@@ -150,7 +154,17 @@ if ($user_id != 0) {
 
     echo $table_html;
 
-} else if ($course_id && $access_isteacher && $course->id != $SITE->id) {
+} else if ($course->id && $course->id != $SITE->id) {
+
+    // If student gets to this link, redirect them to their own results
+    if ($bksb->isUserStudentOnThisCourse($USER->id, $course->id) === true) {
+        redirect('diagnostic_assessment.php?id='.$USER->id.'&course_id='.$course->id, 
+            'You are being directed to your own diagnostic assessment results', 0);
+    }
+
+    if ($access_is_teacher === false) {
+        error("You don't have permission to view all diagnostic assessment results for this course");
+    }
 
     $context = get_context_instance(CONTEXT_COURSE, $course->id);
     

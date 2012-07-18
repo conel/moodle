@@ -51,3 +51,9 @@ $string['bksb_stats'] = 'BKSB Statistics';
 
 $string['bksb_stats_ia'] = 'View Initial Assessment Statistics';
 $string['bksb_stats_da'] = 'View Diagnostic Assessment Statistics';
+
+/* Role names */
+$string['bksb:view_all_results'] = 'View all results';
+$string['bksb:view_own_results'] = 'View own results';
+$string['bksb:view_statistics'] = 'View statistics';
+

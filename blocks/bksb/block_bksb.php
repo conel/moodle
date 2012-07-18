@@ -37,17 +37,17 @@
 
         function get_content() {
 
-            global $USER, $COURSE;
-
             if ($this->content !== NULL) {
                 return $this->content;
             }
+            
+            global $USER, $COURSE;
 
             $user_id = $USER->id;
             $course_id = $COURSE->id;
 
             $url_ia = $CFG->wwwroot . '/blocks/bksb/initial_assessment.php';
-            $url_do = $CFG->wwwroot . '/blocks/bksb/diagnostic_assessment.php';
+            $url_da = $CFG->wwwroot . '/blocks/bksb/diagnostic_assessment.php';
 
             $this->content = new stdClass;
 
@@ -63,7 +63,7 @@
                     $get_params .= sprintf('&amp;course_id=%d', $course_id);
                 }
                 $block_html .= '<li class="ia_icon"><a href="'.$url_ia . $get_params.'">'.get_string('my_initial_assessments', 'block_bksb').'</a></li>
-                    <li class="da_icon"><a href="'.$url_do . $get_params.'">'.get_string('my_diagnostic_assessments', 'block_bksb').'</a></li>';
+                    <li class="da_icon"><a href="'.$url_da . $get_params.'">'.get_string('my_diagnostic_assessments', 'block_bksb').'</a></li>';
             }  
             
             /* Course Results */
@@ -72,7 +72,7 @@
                     $block_html .= '<li>Course ID required</li>';
                 } else {
                     $block_html .= '<li class="ia_icon"><a href="'.$url_ia.'?course_id='.$course_id.'">'.get_string('initial_assessments', 'block_bksb').'</a></li>
-                    <li class="da_icon"><a href="'.$url_do.'?course_id='.$course_id.'&amp;assessment=1">'.get_string('diagnostic_assessments', 'block_bksb').'</a></li>';
+                    <li class="da_icon"><a href="'.$url_da.'?course_id='.$course_id.'&amp;assessment=1">'.get_string('diagnostic_assessments', 'block_bksb').'</a></li>';
                 }
             }
             $block_html .= '</ul>';

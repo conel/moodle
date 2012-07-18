@@ -25,10 +25,10 @@ require_login($course);
 $params = $bksb->getDistinctParams();
 $baseurl = $CFG->wwwroot.'/blocks/bksb/initial_assessment.php' . $params;
 
-// TODO - change! - Needs some sort of is teacher or admin capability
-$access_isteacher = true;
+$access_is_teacher = has_capability('block/bksb:view_all_results', $coursecontext);
+$access_is_student = has_capability('block/bksb:view_own_results', $coursecontext);
 
-if ($course_id != 1) {
+if ($course_id != SITEID) {
     $PAGE->set_context($coursecontext);
     //$PAGE->set_pagelayout('course');
 } else if ($user_id != 0) {
@@ -46,8 +46,12 @@ echo $OUTPUT->header();
 // BKSB logo - branding
 echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo" width="261" height="52" class="bksb_logo" />';
 
-// User
+// Single User Results
 if ($user_id != 0) {
+
+    if ($access_is_student === false) { 
+        error("You don't have permission to view this user's results");
+    }
 
     if ($user = $DB->get_record('user', array('id' => $user_id), 'id, idnumber, firstname, lastname')) {
         $fullname = $user->firstname . ' ' . $user->lastname;
@@ -106,119 +110,120 @@ if ($user_id != 0) {
 
     echo $table_html;
 
-} else {
+} else if ($course_id->id $course->id != $SITE->id) {
 
-    /* Course View */
-    if ($course_id && $access_isteacher && $course->id != $SITE->id) {
-
-        $context = get_context_instance(CONTEXT_COURSE, $course->id);
-
-        if ($updatepref > 0) {
-            $perpage = optional_param('perpage', 10, PARAM_INT);
-            $perpage = ($perpage <= 0) ? 10 : $perpage ;
-            set_user_preference('bksb_ia_perpage', $perpage);
-        }
-
-        /* next we get perpage and from database */
-        $perpage = get_user_preferences('bksb_ia_perpage', 10);
-        $page = optional_param('page', 0, PARAM_INT);
-
-        // Are groups being used in this course?. If so set $currentgroup to reflect the current group
-        $groupmode = groups_get_course_groupmode($course); // Groups are being used
-        $currentgroup = groups_get_course_group($course, true);
-        if (!$currentgroup) $currentgroup = NULL;
-
-        $isseparategroups = ($course->groupmode == SEPARATEGROUPS 
-            && $course->groupmodeforce 
-            && !has_capability('moodle/site:accessallgroups', $context)
-        );
-
-        echo '<div class="bksb_header">';
-        echo "<h2>Initial Assessment Overview (<a href=\"".$CFG->wwwroot."/course/view.php?id=".$course->id."\">".$course->shortname."</a>)</h2>";
-        groups_print_course_menu($course, $baseurl); 
-        echo '<br />';
-        echo '</div>';
-
-        // Get BKSB Result categories
-        $cols = array('picture', 'fullname');
-        $cols_header = array('Picture', 'Name');
-        $cats = $bksb->ass_cats;
-        $tablecolumns = array_merge($cols, $cats);
-        $tableheaders = array_merge($cols_header, $cats);
-
-        $table = new flexible_table('bksb_ia');
-        $table->define_columns($tablecolumns);
-        $table->define_headers($tableheaders);
-        $table->define_baseurl($baseurl);
-        $table->sortable(false);
-        $table->collapsible(false);
-        $table->initialbars(true);
-        $table->column_suppress('picture');	
-        $table->column_class('picture', 'picture');
-        $table->column_class('fullname', 'fullname');
-        $table->set_attribute('cellspacing', '0');
-        $table->set_attribute('id', 'bksb_results_group');
-        $table->set_attribute('class', 'bksb_results');
-        $table->set_attribute('width', '95%');
-        $table->set_attribute('align', 'center');
-        foreach($cats as $cat) {
-            $table->no_sorting($cat);
-        }
-        // Get students by group (if set)
-        if ($group != 0) {
-            $members = groups_get_members_by_role($group, $course->id, 'u.id, u.firstname, u.lastname, u.idnumber');
-            $course_students = $members[5]->users; // students are role '5'
-        } else {
-            $course_students = $bksb->getStudentsForCourse($course->id);
-        }
-        $table->pagesize($perpage, count($course_students));
-        $table->setup();
-        $offset = $page * $perpage;
-        $students = $bksb->filterStudentsByPage($course_students, $offset, $perpage);
-        $no_students = count($students);
-
-        if ($no_students > 0) {
-            foreach ($students as $student) {
-                Cache::init('user-'.$student->idnumber.'-ia-results.cache', $bksb->cache_life); // cache for 1 day
-                if (Cache::cacheFileExists()) {
-                    $bksb_results = Cache::getCache();
-                } else {
-                    $bksb_results = $bksb->getResults($student->idnumber);
-                    Cache::setCache($bksb_results);
-                }
-
-                $picture = $OUTPUT->user_picture($student, array('size'=>40));
-                $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/initial_assessment.php?id='.$student->id.'&amp;course_id='.$course_id.'">'.fullname($student).'</a>';
-                $col_row = array($picture, $name_html);
-                $row = array_merge($col_row, $bksb_results);
-                $table->add_data($row);
-            }
-
-
-            $per_html = '<form name="options" action="'.$baseurl.'" method="post">';
-            $per_html .= '<input type="hidden" id="updatepref" name="updatepref" value="1" />';
-            $per_html .= '<table id="optiontable" align="center">';
-            $per_html .= '<tr align="right"><td><label for="perpage">Per page</label></td>';
-            $per_html .= '<td align="left">';
-            $per_html .= '<input type="text" id="perpage" name="perpage" size="1" value="'.$perpage.'" />';
-            $per_html .= '</td></tr>';
-            $per_html .= '<tr>';
-            $per_html .= '<td colspan="2" align="right">';
-            $per_html .= '<input type="submit" value="'.get_string('savepreferences').'" />';
-            $per_html .= '</td></tr></table></form>';
-            echo $per_html;
-
-        }
-        $table->print_html();  /// Print the whole table
-        if ($no_students == 0) {
-            echo '<center><p><strong>No initial assessment results for this course or filter.</strong></p></center>';
-        }
+    // If student gets to this link, redirect them to their own results
+    if ($bksb->isUserStudentOnThisCourse($USER->id, $course->id) === true) {
+        redirect('initial_assessment.php?id='.$USER->id.'&course_id='.$course->id, 
+            'You are being directed to your own initial assessment results', 0);
     }
 
-    /*
-    redirect("initial_assessment.php$get_params", 
-    'You are being directed to your own initial assessment results',0);
-    */
+    if ($access_is_teacher === false) {
+        error("You don't have permission to view all diagnostic assessment results for this course");
+    }
+
+    $context = get_context_instance(CONTEXT_COURSE, $course->id);
+
+    if ($updatepref > 0) {
+        $perpage = optional_param('perpage', 10, PARAM_INT);
+        $perpage = ($perpage <= 0) ? 10 : $perpage ;
+        set_user_preference('bksb_ia_perpage', $perpage);
+    }
+
+    /* next we get perpage and from database */
+    $perpage = get_user_preferences('bksb_ia_perpage', 10);
+    $page = optional_param('page', 0, PARAM_INT);
+
+    // Are groups being used in this course?. If so set $currentgroup to reflect the current group
+    $groupmode = groups_get_course_groupmode($course); // Groups are being used
+    $currentgroup = groups_get_course_group($course, true);
+    if (!$currentgroup) $currentgroup = NULL;
+
+    $isseparategroups = ($course->groupmode == SEPARATEGROUPS 
+        && $course->groupmodeforce 
+        && !has_capability('moodle/site:accessallgroups', $context)
+    );
+
+    echo '<div class="bksb_header">';
+    echo "<h2>Initial Assessment Overview (<a href=\"".$CFG->wwwroot."/course/view.php?id=".$course->id."\">".$course->shortname."</a>)</h2>";
+    groups_print_course_menu($course, $baseurl); 
+    echo '<br />';
+    echo '</div>';
+
+    // Get BKSB Result categories
+    $cols = array('picture', 'fullname');
+    $cols_header = array('Picture', 'Name');
+    $cats = $bksb->ass_cats;
+    $tablecolumns = array_merge($cols, $cats);
+    $tableheaders = array_merge($cols_header, $cats);
+
+    $table = new flexible_table('bksb_ia');
+    $table->define_columns($tablecolumns);
+    $table->define_headers($tableheaders);
+    $table->define_baseurl($baseurl);
+    $table->sortable(false);
+    $table->collapsible(false);
+    $table->initialbars(true);
+    $table->column_suppress('picture');	
+    $table->column_class('picture', 'picture');
+    $table->column_class('fullname', 'fullname');
+    $table->set_attribute('cellspacing', '0');
+    $table->set_attribute('id', 'bksb_results_group');
+    $table->set_attribute('class', 'bksb_results');
+    $table->set_attribute('width', '95%');
+    $table->set_attribute('align', 'center');
+    foreach($cats as $cat) {
+        $table->no_sorting($cat);
+    }
+    // Get students by group (if set)
+    if ($group != 0) {
+        $members = groups_get_members_by_role($group, $course->id, 'u.id, u.firstname, u.lastname, u.idnumber');
+        $course_students = $members[5]->users; // students are role '5'
+    } else {
+        $course_students = $bksb->getStudentsForCourse($course->id);
+    }
+    $table->pagesize($perpage, count($course_students));
+    $table->setup();
+    $offset = $page * $perpage;
+    $students = $bksb->filterStudentsByPage($course_students, $offset, $perpage);
+    $no_students = count($students);
+
+    if ($no_students > 0) {
+        foreach ($students as $student) {
+            Cache::init('user-'.$student->idnumber.'-ia-results.cache', $bksb->cache_life); // cache for 1 day
+            if (Cache::cacheFileExists()) {
+                $bksb_results = Cache::getCache();
+            } else {
+                $bksb_results = $bksb->getResults($student->idnumber);
+                Cache::setCache($bksb_results);
+            }
+
+            $picture = $OUTPUT->user_picture($student, array('size'=>40));
+            $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/initial_assessment.php?id='.$student->id.'&amp;course_id='.$course_id.'">'.fullname($student).'</a>';
+            $col_row = array($picture, $name_html);
+            $row = array_merge($col_row, $bksb_results);
+            $table->add_data($row);
+        }
+
+
+        $per_html = '<form name="options" action="'.$baseurl.'" method="post">';
+        $per_html .= '<input type="hidden" id="updatepref" name="updatepref" value="1" />';
+        $per_html .= '<table id="optiontable" align="center">';
+        $per_html .= '<tr align="right"><td><label for="perpage">Per page</label></td>';
+        $per_html .= '<td align="left">';
+        $per_html .= '<input type="text" id="perpage" name="perpage" size="1" value="'.$perpage.'" />';
+        $per_html .= '</td></tr>';
+        $per_html .= '<tr>';
+        $per_html .= '<td colspan="2" align="right">';
+        $per_html .= '<input type="submit" value="'.get_string('savepreferences').'" />';
+        $per_html .= '</td></tr></table></form>';
+        echo $per_html;
+
+    }
+    $table->print_html();  /// Print the whole table
+    if ($no_students == 0) {
+        echo '<center><p><strong>No initial assessment results for this course or filter.</strong></p></center>';
+    }
 }
 
 echo $OUTPUT->footer();

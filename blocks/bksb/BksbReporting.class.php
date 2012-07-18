@@ -38,7 +38,7 @@ class BksbReporting {
         $this->question_counts = array();
 
         // TODO - Move cache life value to settings
-        $this->cache_life = 86400; // 1 day
+        $this->cache_life = 259200; // 3 days
 
         // array to hold table columns - ass cats
         $this->ass_cats = array(
@@ -1055,9 +1055,7 @@ class BksbReporting {
         if ($username != '') {
             // Escape single quotes
             $username = str_replace("'", "''", $username);
-            $query = sprintf("SELECT FirstName, LastName FROM bksb_Users WHERE userName = '%s'",
-                $username
-            );
+            $query = sprintf("SELECT FirstName, LastName FROM bksb_Users WHERE userName = '%s'", $username);
             
             if ($result = $this->connection->execute($query)) {
                 $this->num_queries++;
@@ -1200,11 +1198,9 @@ class BksbReporting {
             } else if ($ia_type == 'ICT') {
                 
                 if ($group_sessions != '') {
-                    //$query = "SELECT UserName, WordProcessing, Spreadsheets, Databases, DesktopPublishing, Presentation, Email, General, Internet FROM dbo.bksb_ICTIAResults WHERE (session_id IN ($group_sessions)) ORDER BY UserName";
                     $query = sprintf("SELECT ict.UserName, u.FirstName, u.LastName, ict.WordProcessing, ict.Spreadsheets, ict.Databases, ict.DesktopPublishing, ict.Presentation, ict.Email, ict.General, ict.Internet FROM bksb_ICTIAResults AS ict LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(ict.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (ict.session_id IN (%s)) ORDER BY ict.UserName", $group_sessions);
                     
                 } else {
-                    //$query = "SELECT UserName, WordProcessing, Spreadsheets, Databases, DesktopPublishing, Presentation, Email, General, Internet FROM dbo.bksb_ICTIAResults WHERE (UserName IN ($group_users)) ORDER BY UserName";
                     $query = sprintf("SELECT ict.UserName, u.FirstName, u.LastName, ict.WordProcessing, ict.Spreadsheets, ict.Databases, ict.DesktopPublishing, ict.Presentation, ict.Email, ict.General, ict.Internet FROM bksb_ICTIAResults AS ict LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(ict.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (ict.UserName IN (%s)) ORDER BY ict.UserName", $group_users);
                 }
 
@@ -1441,7 +1437,7 @@ class BksbReporting {
                 
             // bksb_Users
             if ($user_exists[0] === TRUE) {			
-                $query = "UPDATE dbo.bksb_Users SET userName = '$new_username', FirstName = '$firstname', LastName = '$lastname' WHERE (userName = '$old_username')";
+                $query = sprintf("UPDATE dbo.bksb_Users SET userName = '%s', FirstName = '%s', LastName = '%s' WHERE (userName = '%s')", $new_username, $firstname, $lastname, $old_username);
                 if (!$result = $this->connection->execute($query)) {
                     $this->errors[] = "Query failed: $query";
                     $updated = FALSE;
@@ -1452,7 +1448,7 @@ class BksbReporting {
             }
             // bksb_GroupMembership
             if ($user_exists[1] === TRUE) {
-                $gm_query = "UPDATE dbo.bksb_GroupMembership SET UserName = '$new_username' WHERE UserName = '$old_username'";
+                $gm_query = sprintf("UPDATE dbo.bksb_GroupMembership SET UserName = '%s' WHERE UserName = '%s'", $new_username, $old_username);
                 if (!$gm_result = $this->connection->execute($gm_query)) {
                     $this->errors[] = "Query failed: $gm_query";
                     $updated = FALSE;
@@ -1462,7 +1458,7 @@ class BksbReporting {
             }
             // bksb_IAResults
             if ($user_exists[2] === TRUE) {
-                $ia_query = "UPDATE dbo.bksb_IAResults SET UserName = '$new_username' WHERE UserName = '$old_username'";
+                $ia_query = sprintf("UPDATE dbo.bksb_IAResults SET UserName = '%s' WHERE UserName = '%s'", $new_username, $old_username );
                 if (!$ia_result = $this->connection->execute($ia_query)) {
                     $this->errors[] = "Query failed: $ia_query";
                     $updated = FALSE;
@@ -1472,7 +1468,7 @@ class BksbReporting {
             }
             // bksb_ICTIAResults
             if ($user_exists[3] === TRUE) {
-                $ictia_query = "UPDATE dbo.bksb_ICTIAResults SET UserName = '$new_username' WHERE UserName = '$old_username'";
+                $ictia_query = sprintf("UPDATE dbo.bksb_ICTIAResults SET UserName = '%s' WHERE UserName = '%s'", $new_username, $old_username);
                 if (!$ictia_result = $this->connection->execute($ictia_query)) {
                     $this->errors[] = "Query failed: $ictia_query";
                     $updated = FALSE;
@@ -1482,7 +1478,7 @@ class BksbReporting {
             }
             // bksb_Sessions
             if ($user_exists[4] === TRUE) {
-                $sess_query = "UPDATE dbo.bksb_Sessions SET userName = '$new_username' WHERE userName = '$old_username'";
+                $sess_query = sprintf("UPDATE dbo.bksb_Sessions SET userName = '%s' WHERE userName = '%s'", $new_username, $old_username);
                 if (!$sess_result = $this->connection->execute($sess_query)) {
                     $this->errors[] = "Query failed: $sess_query";
                     $updated = FALSE;
@@ -1511,9 +1507,9 @@ class BksbReporting {
     // Get user ids of E-Learning Technologists
     // Check if given user is an E-learning "technologist"
     public function is_elt($userid = '') {
-        global $DB;
+        global $DB, $CFG;
         if ($userid != '') {
-            $query = "SELECT DISTINCT userid FROM mdl_role_assignments WHERE roleid = (SELECT id FROM mdl_role WHERE shortname = 'elearningtechnologist')";
+            $query = "SELECT DISTINCT userid FROM ".$CFG->prefix."role_assignments WHERE roleid = (SELECT id FROM ".$CFG->prefix."role WHERE shortname = 'elearningtechnologist')";
             $user_ids = array();
             if ($users = $DB->get_records_sql($query)) {
                 foreach ($users as $user) {
@@ -1538,7 +1534,7 @@ class BksbReporting {
         $postcode = str_replace(' ', '', $postcode);
 
         // Try to match on idnumber first
-        $query = "SELECT userName FROM dbo.bksb_Users WHERE userName = '$idnumber'";	
+        $query = sprintf("SELECT userName FROM dbo.bksb_Users WHERE userName = '%s'", $idnumber);	
         if ($result = $this->connection->execute($query)) {
             $this->num_queries++;
             while (!$result->EOF) {
@@ -1550,7 +1546,7 @@ class BksbReporting {
             }
             $result->Close();
         }
-        $query = "SELECT userName FROM dbo.bksb_Users WHERE FirstName = '$forename' AND LastName = '$surname' ORDER BY user_id DESC";	
+        $query = sprintf("SELECT userName FROM dbo.bksb_Users WHERE FirstName = '%s' AND LastName = '%s' ORDER BY user_id DESC", $forename, $surname);	
         if ($result = $this->connection->execute($query)) {
             $this->num_queries++;
             $usernames = array();
@@ -1564,7 +1560,7 @@ class BksbReporting {
             $result->Close();
         }
         // change format of dob
-        $query = "SELECT userName FROM dbo.bksb_Users WHERE (REPLACE(PostcodeA, ' ', '') = '$postcode') AND (CONVERT(VARCHAR(10), DOB, 103) = '$dob')";
+        $query = sprintf("SELECT userName FROM dbo.bksb_Users WHERE (REPLACE(PostcodeA, ' ', '') = '%s') AND (CONVERT(VARCHAR(10), DOB, 103) = '%s')", $postcode, $dob);
         if ($result = $this->connection->execute($query)) {
             $this->num_queries++;
             while (!$result->EOF) {
@@ -1632,6 +1628,14 @@ class BksbReporting {
 
         return $students;
     }
+    public function isUserStudentOnThisCourse($user_id='', $course_id='') {
+        if ($user_id == '' || $course_id == '') return false;
+        $students = $this->getStudentsForCourse($course_id);
+        foreach ($students as $student) {
+            if ($student->id == $user_id) return true;
+        }
+        return false;
+    }
 
     public function filterStudentsByPage(Array $students, $offset, $perpage) {
         $valid_keys[] = $offset;
@@ -1650,8 +1654,8 @@ class BksbReporting {
         return $students;
     }
 
-    // Idiot me only updated usernames in one table, instead of 'all instances' that use the username: FIX!
     /*
+    // Idiot me only updated usernames in one table, instead of 'all instances' that use the username: FIX!
     public function restoreUsernames() {
     
         $query = "SELECT user_id, userName FROM dbo.bksb_Users ORDER BY user_id";
