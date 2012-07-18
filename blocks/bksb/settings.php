@@ -105,6 +105,8 @@ $bksb_stats = new admin_setting_heading(
     'block_bksb/bksb_stats', 
     get_string('bksb_stats', 'block_bksb')
 );
+$settings->add($bksb_stats);
+
 $ia_link = new moodle_url('/blocks/bksb/stats/initial_assessments.php');
 $ia_link_html = '<a href="'.$ia_link.'">'.get_string('bksb_stats_ia', 'block_bksb').'</a>';
 $settings->add(new admin_setting_heading(

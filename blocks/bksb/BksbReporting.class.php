@@ -69,6 +69,8 @@ class BksbReporting {
     }
 
     private function createBKSBConnection() {
+        global $CFG;
+
         $bksb_server = get_config('block_bksb', 'db_server');
         $bksb_user = get_config('block_bksb', 'db_user');
         $bksb_password = get_config('block_bksb', 'db_password');
@@ -78,7 +80,13 @@ class BksbReporting {
         $this->connection = new COM ("ADODB.Connection") or die("Cannot start ADO");
         // define connection string, specify database driver
         $con = "PROVIDER=SQLOLEDB;SERVER=".$bksb_server.";UID=".$bksb_user.";PWD=".$bksb_password.";DATABASE=".$bksb_db;
-        $this->connection->open($con);
+        try {
+            $this->connection->open($con);
+        } catch (Exception $e) {
+            $this->errors[] = 'Incorrect BKSB database credentials. ' . $e->getMessage();
+            $settings_url = $CFG->wwwroot . '/admin/settings.php?section=blocksettingbksb';
+            error('Incorrect BKSB database credentials. Please update them <a href="'.$settings_url.'">here</a>.', $settings_url);
+        }
     }
 
     
@@ -1684,13 +1692,18 @@ class BksbReporting {
 
     public function __destruct() {
 
-        $this->connection->Close();
+        try {
+            $this->connection->Close();
+        } catch (Exception $e) {
+            //$this->errors[] = $e->getMessage();
+        }
 
         if ($this->debug === true) {
             echo '<div class="debugging">';
             echo '<h2>Debugging</h2>';
             echo '<p><strong>Number of SQL queries:</strong> ' . $this->num_queries . '</p>';
             if (xdebug_is_enabled()) echo '<p><strong>Time taken:</strong> ' . xdebug_time_index() . '</p>';
+            echo '</div>';
 
             if (count($this->errors) > 0) {
                 echo '<div style="color:red;">';
@@ -1702,7 +1715,6 @@ class BksbReporting {
                 echo '</ul>';
                 echo '</div>';
             }
-            echo '</div>';
         }
 
         $this->errors[] = array();

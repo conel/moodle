@@ -40,16 +40,15 @@
             if ($this->content !== NULL) {
                 return $this->content;
             }
-            
+
             global $USER, $COURSE;
+            $this->content = new stdClass;
 
             $user_id = $USER->id;
             $course_id = $COURSE->id;
 
             $url_ia = $CFG->wwwroot . '/blocks/bksb/initial_assessment.php';
             $url_da = $CFG->wwwroot . '/blocks/bksb/diagnostic_assessment.php';
-
-            $this->content = new stdClass;
 
             // Is the logged in user a student?
             $user_is_student = (strpos($USER->email, '@student.conel.ac.uk') === false) ? false : true;

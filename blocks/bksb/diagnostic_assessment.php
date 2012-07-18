@@ -6,7 +6,6 @@ require('BksbReporting.class.php');
 include('Cache.class.php');
 require($CFG->libdir.'/tablelib.php');
 require($CFG->dirroot . '/group/lib.php'); // Required to get group members
-$bksb = new BksbReporting();
 
 $user_id = optional_param('id', 0, PARAM_INT);
 $course_id = optional_param('course_id', SITEID, PARAM_INT);
@@ -22,10 +21,6 @@ if (!$coursecontext = get_context_instance(CONTEXT_COURSE, $course->id)) {
 }
 require_login($course);
 
-// nkowald - 2012-01-10 - Define $baseurl here, needs to keep all get distinct params
-$params = $bksb->getDistinctParams();
-$baseurl = $CFG->wwwroot.'/blocks/bksb/diagnostic_assessment.php' . $params;
-
 $access_is_teacher = has_capability('block/bksb:view_all_results', $coursecontext);
 $access_is_student = has_capability('block/bksb:view_own_results', $coursecontext);
 
@@ -37,6 +32,12 @@ if ($course_id != SITEID) {
     $PAGE->navigation->extend_for_user($USER);
     //$PAGE->set_pagelayout('user');
 }
+
+$bksb = new BksbReporting();
+// nkowald - 2012-01-10 - Define $baseurl here, needs to keep all get distinct params
+$params = $bksb->getDistinctParams();
+$baseurl = $CFG->wwwroot.'/blocks/bksb/diagnostic_assessment.php' . $params;
+
 $title = 'BKSB - Diagnostic Assessment Overview';
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
