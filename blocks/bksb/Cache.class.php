@@ -26,7 +26,11 @@ class Cache {
     */
     public static function init($cache_filename='', $cache_life='') {
         global $CFG;
-        self::$cache_dir = $CFG->dataroot . '\\cache\\bksb\\';
+        self::$cache_dir = $CFG->dataroot . '/cache/bksb/';
+        if (!file_exists(self::$cache_dir) || !is_dir(self::$cache_dir)) {
+            // Create bksb folder
+            mkdir($CFG->dataroot . '/cache/bksb/', 0755);
+        }
         if (self::$cache_dir == '') {
             $path = pathinfo(getcwd());
             self::$cache_dir = $path['dirname'] . '/' . $path['basename'] . '/';
@@ -69,6 +73,13 @@ class Cache {
     public static function setCache($data='') {
         $cache_data = serialize($data);
         file_put_contents(self::$cache_file, $cache_data);
+    }
+
+    public static function clearCache() {
+        global $CFG;
+        self::$cache_dir = $CFG->dataroot . '/cache/bksb/';
+        $files = glob(self::$cache_dir . '*.cache');
+        foreach ($files as $file) unlink($file);
     }
 }
 

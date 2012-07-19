@@ -6,7 +6,7 @@
 
 // Settings stored in the 'mdl_config_plugins' table.
 
-// BKSB Database Settings
+/* BKSB Database Settings */
 $bksb_settings = new admin_setting_heading(
     'block_bksb/bksb_settings', 
     get_string('bksb_settings', 'block_bksb')
@@ -55,7 +55,7 @@ $bksb_stats = new admin_setting_heading(
 );
 
 
-// MIS Database Settings
+/* MIS Database Settings */
 $mis_settings = new admin_setting_heading(
     'block_bksb/mis_settings', 
     get_string('mis_settings', 'block_bksb')
@@ -98,9 +98,25 @@ $mis_db_password = new admin_setting_configpasswordunmask(
 );
 $settings->add($mis_db_password);
 
+/* Cache */
+$bksb_cache = new admin_setting_heading(
+    'block_bksb/bksb_cache', 
+    get_string('bksb_cache', 'block_bksb')
+);
+$settings->add($bksb_cache);
+
+$bksb_cache_life = new admin_setting_configtext(
+    'block_bksb/cache_life_seconds', 
+    get_string('cache_life_seconds', 'block_bksb'), 
+    get_string('set_cache_life_seconds', 'block_bksb'),
+    259200,
+    PARAM_INT
+);
+$settings->add($bksb_cache_life);
 
 
-// Links to Statistic Pages
+
+/* Links to Statistic Pages */
 $bksb_stats = new admin_setting_heading(
     'block_bksb/bksb_stats', 
     get_string('bksb_stats', 'block_bksb')

@@ -44,6 +44,7 @@ $PAGE->set_heading($title);
 $PAGE->set_url($baseurl);
 
 echo $OUTPUT->header();
+Cache::clearCache();
 
 // BKSB logo - branding
 echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo" width="261" height="52" class="bksb_logo" />';

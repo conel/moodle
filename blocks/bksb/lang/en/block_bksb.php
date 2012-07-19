@@ -45,6 +45,12 @@ $string['mis_set_db_user'] = 'Set database user';
 $string['mis_db_password'] = 'Database Password';
 $string['mis_set_db_password'] = 'Set database password';
 
+/* Cache */
+$string['bksb_cache'] = 'Cache Settings';
+
+$string['cache_life_seconds'] = 'Cache life (in seconds)';
+$string['set_cache_life_seconds'] = 'Set how long BKSB results are cached (in seconds)';
+
 
 /* Stats */
 $string['bksb_stats'] = 'BKSB Statistics';

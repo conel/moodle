@@ -37,8 +37,11 @@ class BksbReporting {
         $this->num_queries = 0;
         $this->question_counts = array();
 
-        // TODO - Move cache life value to settings
         $this->cache_life = 259200; // 3 days
+        $cache_life = get_config('block_bksb', 'cache_life_seconds');
+        if ($cache_life != 0) {
+            $this->cache_life = $cache_life;
+        }
 
         // array to hold table columns - ass cats
         $this->ass_cats = array(
