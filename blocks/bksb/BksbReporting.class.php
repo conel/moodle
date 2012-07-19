@@ -17,8 +17,8 @@ class BksbReporting {
     private $server;
     private $password;
     private $selected_db;
-    private $num_queries;
 
+    public $num_queries;
     public $errors;
     public $debug;
     public $connection;
@@ -495,7 +495,7 @@ class BksbReporting {
 
     public function getBksbDiagSessions($username='') {
         $sessions = array();
-        $query = sprintf("SELECT bs.session_id, ba.[assessment name] FROM bksb_Sessions AS bs LEFT OUTER JOIN bksb_Assessments AS ba ON bs.assessment_id = ba.ass_ref WHERE (bs.userName = '%d') AND (ba.[assessment report] = 'Reports/DiagReport.aspx') AND (ba.[assessment group] = 1) ORDER BY bs.dateCreated", $username);
+        $query = sprintf("SELECT bs.session_id, ba.[assessment name] FROM bksb_Sessions AS bs LEFT OUTER JOIN bksb_Assessments AS ba ON bs.assessment_id = ba.ass_ref WHERE (bs.userName = '%d') AND (ba.[assessment report] = 'Reports/DiagReport.aspx') AND (ba.[assessment group] = 1) AND (bs.status = 'Complete') ORDER BY bs.dateCreated", $username);
         if ($result = $this->connection->execute($query)) {
             $this->num_queries++;
             while (!$result->EOF) {
@@ -1626,6 +1626,44 @@ class BksbReporting {
         return $filtered;
     }
 
+    public function getDiagnosticIdsForStudents(Array $students) {
+        $student_idnumbers = array();
+        foreach ($students as $student) {
+            $student_idnumbers[] = "'".$student->idnumber."'";
+        }
+        $csv_student_idnumbers = implode(',', $student_idnumbers);
+        $query = sprintf("SELECT DISTINCT bs.assessment_id AS id, bs.userName, ba.[assessment name] as name FROM bksb_Sessions AS bs LEFT OUTER JOIN bksb_Assessments AS ba ON bs.assessment_id = ba.ass_ref WHERE (bs.userName IN (%s)) AND (ba.[assessment group] = 1) ORDER BY bs.userName", $csv_student_idnumbers);
+        if ($result = $this->connection->execute($query)) {
+            $this->num_queries++;
+            $diag_ids = array();
+            $search = array('English', 'Mathematics', ' Diagnostic');
+            $replace = array('Literacy', 'Numeracy', '');
+            while (!$result->EOF) {
+                $diag_ids[] = array(
+                    $result->fields['userName']->value,
+                    str_replace($search, $replace, $result->fields['name']->value),
+                    $result->fields['id']->value
+                );
+                $result->MoveNext();
+            }
+            $result->Close();
+            return $diag_ids;
+        }
+    }
+    public function filterStudentsByDiagAss(Array $students, Array $diag_ids, $ass_no) {
+        $ass_type = $this->getAssTypeFromNo($ass_no);
+        $filtered = array();
+        foreach ($students as $student) {
+            foreach ($diag_ids as $diag) {
+                if ($diag[1] == $ass_type && $diag[0] == $student->idnumber) {
+                    $filtered[] = $student;
+                    break;
+                }
+            }
+        }
+        return $filtered;
+    }
+
     public function getStudentsForCourse($course_id) {
         global $DB, $CFG;
 
@@ -1636,6 +1674,7 @@ class BksbReporting {
         );
 
         $students = $DB->get_records_sql($query); 
+        $this->num_queries++;
 
         return $students;
     }

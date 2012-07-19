@@ -159,12 +159,8 @@ if ($user_id != 0) {
 } else if ($course->id && $course->id != $SITE->id) {
 
     // If student gets to this link, redirect them to their own results
-    if ($bksb->isUserStudentOnThisCourse($USER->id, $course->id) === true) {
-        redirect('diagnostic_assessment.php?id='.$USER->id.'&course_id='.$course->id, 
-            'You are being directed to your own diagnostic assessment results', 0);
-    }
-
     if ($access_is_teacher === false) {
+        $own_results = 'diagnostic_assessment.php?id='.$USER->id.'&amp;course_id='.$course->id;
         error("You don't have permission to view all diagnostic assessment results for this course");
     }
 
@@ -218,8 +214,14 @@ if ($user_id != 0) {
     // Get BKSB Result categories
     $cols = array('picture', 'fullname');
     $cols_header = array('Picture', 'Name');
-    $no_questions = $bksb->getNoQuestions($ass_no);
-    // Create array of questions for num returned
+
+    Cache::init('da-questions-'.$ass_no.'.cache', 2419200); // one month
+    if (Cache::cacheFileExists()) {
+        $overviews = Cache::getCache();
+        $no_questions = count($overviews);
+    } else {
+        $no_questions = $bksb->getNoQuestions($ass_no);
+    }
     $questions = array();
     for ($i=1; $i<=$no_questions; $i++) {
        $questions[] = $i; 
@@ -248,13 +250,31 @@ if ($user_id != 0) {
     foreach ($questions as $question) {
         $table->no_sorting($question);
     }
+
     // Get students by group (if set)
     if ($group != 0) {
-        $members = groups_get_members_by_role($group, $course->id, 'u.id, u.firstname, u.lastname, u.idnumber');
-        $course_students = $members[5]->users; // students are role '5'
+        Cache::init('course-'.$course->id.'-users-da-'.$ass_no.'-group-'.$group.'.cache', $bksb->cache_life);
+        if (Cache::cacheFileExists()) {
+            $course_students = Cache::getCache();
+        } else {
+            $members = groups_get_members_by_role($group, $course->id, 'u.id, u.firstname, u.lastname, u.idnumber');
+            $course_students = $members[5]->users; // students are role '5'
+            $diag_ids = $bksb->getDiagnosticIdsForStudents($course_students);
+            $course_students = $bksb->filterStudentsByDiagAss($course_students, $diag_ids, $ass_no);
+            Cache::setCache($course_students);
+        }
     } else {
-        $course_students = $bksb->getStudentsForCourse($course->id);
+        Cache::init('course-'.$course->id.'-users-da-'.$ass_no.'.cache', $bksb->cache_life);
+        if (Cache::cacheFileExists()) {
+            $course_students = Cache::getCache();
+        } else {
+            $course_students = $bksb->getStudentsForCourse($course->id);
+            $diag_ids = $bksb->getDiagnosticIdsForStudents($course_students);
+            $course_students = $bksb->filterStudentsByDiagAss($course_students, $diag_ids, $ass_no);
+            Cache::setCache($course_students);
+        }
     }
+
     $table->pagesize($perpage, count($course_students));
     $table->setup();
     $offset = $page * $perpage;
@@ -301,27 +321,27 @@ if ($user_id != 0) {
     $table->print_html();  // Print the table
 
     if ($records_found == true) {
-        Cache::init('da-questions-'.$ass_no.'.cache', 1209600); // two weeks
+        Cache::init('da-questions-'.$ass_no.'.cache', 2419200); // one month
         if (Cache::cacheFileExists()) {
-            $q_html = Cache::getCache();
+            $overviews = Cache::getCache();
         } else {
-            $q_html = '<table class="bksb_key" width="95%">';
-            $q_html .= '<tr><td>';
-            $q_html .= "<h5>Questions</h5>";
-            $q_html .= "<ol>";
             $overviews = $bksb->getAssDetails($ass_no);
-            foreach ($overviews as $overview) {
-                if ($overview[0] != $overview[1]) {
-                    $q_html .= "<li>".$overview[0]."<span style=\"color:#CCC;\"> &mdash; ".$overview[1]."</span></li>";
-                } else {
-                    $q_html .= "<li>".$overview[0]."</li>";
-                }
-            }
-            $q_html .= "</ol>";
-            $q_html .= '</td></tr>';
-            $q_html .= '</table>';
-            Cache::setCache($q_html);
+            Cache::setCache($overviews);
         }
+        $q_html = '<table class="bksb_key" width="95%">';
+        $q_html .= '<tr><td>';
+        $q_html .= "<h5>Questions</h5>";
+        $q_html .= "<ol>";
+        foreach ($overviews as $overview) {
+            if ($overview[0] != $overview[1]) {
+                $q_html .= "<li>".$overview[0]."<span style=\"color:#CCC;\"> &mdash; ".$overview[1]."</span></li>";
+            } else {
+                $q_html .= "<li>".$overview[0]."</li>";
+            }
+        }
+        $q_html .= "</ol>";
+        $q_html .= '</td></tr>';
+        $q_html .= '</table>';
         echo $q_html;
     } else {
         echo '<center><br /><p style="color:#000;"><strong>No diagnostic assessment results for this course or filtering.</strong></p></center>';

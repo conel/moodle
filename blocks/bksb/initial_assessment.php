@@ -114,13 +114,9 @@ if ($user_id != 0) {
 } else if ($course->id && $course->id != $SITE->id) {
 
     // If student gets to this link, redirect them to their own results
-    if ($bksb->isUserStudentOnThisCourse($USER->id, $course->id) === true) {
-        redirect('initial_assessment.php?id='.$USER->id.'&course_id='.$course->id, 
-            'You are being directed to your own initial assessment results', 0);
-    }
-
     if ($access_is_teacher === false) {
-        error("You don't have permission to view all diagnostic assessment results for this course");
+        $own_results = 'initial_assessment.php?id='.$USER->id.'&amp;course_id='.$course->id;
+        error("You don't have permission to view all diagnostic assessment results for this course", $own_results);
     }
 
     $context = get_context_instance(CONTEXT_COURSE, $course->id);
