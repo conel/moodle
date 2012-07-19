@@ -40,6 +40,7 @@ $title = 'BKSB - Initial Assessment Overview';
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
 $PAGE->set_url($baseurl);
+$PAGE->requires->css('/blocks/bksb/styles.css', true);
 
 echo $OUTPUT->header();
 

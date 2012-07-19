@@ -51,6 +51,8 @@ $string['bksb_cache'] = 'Cache Settings';
 $string['cache_life_seconds'] = 'Cache life (in seconds)';
 $string['set_cache_life_seconds'] = 'Set how long BKSB results are cached (in seconds)';
 
+$string['clear_cache'] = 'Clear BKSB results cache';
+
 
 /* Stats */
 $string['bksb_stats'] = 'BKSB Statistics';
