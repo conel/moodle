@@ -230,6 +230,7 @@ table.centered_tds td {
 img.bksb_logo {
   display: block;
   margin: 0 auto;
+  margin-bottom: 8px;
 }
 .bksb_header {
   text-align: center;
