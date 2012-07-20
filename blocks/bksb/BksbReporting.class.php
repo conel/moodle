@@ -37,7 +37,7 @@ class BksbReporting {
         $this->num_queries = 0;
         $this->question_counts = array();
 
-        $this->cache_life = 259200; // 3 days
+        $this->cache_life = 604800; // 7 days default
         $cache_life = get_config('block_bksb', 'cache_life_seconds');
         if ($cache_life != 0) {
             $this->cache_life = $cache_life;
@@ -874,6 +874,10 @@ class BksbReporting {
     
     public function getInvalidBksbUsers($firstname='', $lastname='', $order_field='userName') {
     
+        global $DB;
+        // Can be memory intensive, increase limit
+        ini_set('memory_limit', '500M');
+        
         // Escape firstname and lastname for SQL query
         $firstname = ($firstname != '') ? trim($firstname) : $firstname;
         $lastname = ($lastname != '') ? trim($lastname) : $lastname;
@@ -907,33 +911,34 @@ class BksbReporting {
 
                 // Do checks here instead of later
                 $username = $result->fields['userName']->value;
-                $invalid = FALSE;
-                
+                $invalid = false;
                 
                 if (!is_numeric($username)) {
                     $reason = 'Non-numeric username';
-                    $invalid = TRUE;
-                }
-                else if (!record_exists('user', 'idnumber', $username)) {
+                    $invalid = true;
+                } 
+                /*
+                else if (!$DB->record_exists('user', array('idnumber' => $username))) {
                     $reason = 'ID Number doesn\'t exist in Moodle';
-                    $invalid = TRUE;
+                    $invalid = true;
                 }
+                */
             
-                if ($invalid === TRUE) {
+                if ($invalid === true) {
                     $invalid_users[] = array(
-                                'username' => $username, 
-                                'firstname' => $result->fields['FirstName']->value,
-                                'lastname' => $result->fields['LastName']->value,
-                                'dob' => ($result->fields['DOB']->value != '01/01/1900') ? $result->fields['DOB']->value : "",
-                                'postcode' => ($result->fields['Postcode']->value != '') ? strtoupper($result->fields['Postcode']->value) : "",
-                                'id' => $result->fields['user_id']->value,
-                                'reason' => $reason
+                    'username' => $username, 
+                    'firstname' => $result->fields['FirstName']->value,
+                    'lastname' => $result->fields['LastName']->value,
+                    'dob' => ($result->fields['DOB']->value != '01/01/1900') ? $result->fields['DOB']->value : "",
+                    'postcode' => ($result->fields['Postcode']->value != '') ? strtoupper($result->fields['Postcode']->value) : "",
+                    'id' => $result->fields['user_id']->value,
+                    'reason' => $reason
                     );
                 }
                 $result->MoveNext();
             }
-            $result->Close();
         }
+        $result->Close();
         
         return $invalid_users;
     }
@@ -1744,7 +1749,9 @@ class BksbReporting {
             echo '<div class="debugging">';
             echo '<h2>Debugging</h2>';
             echo '<p><strong>Number of SQL queries:</strong> ' . $this->num_queries . '</p>';
-            if (xdebug_is_enabled()) echo '<p><strong>Time taken:</strong> ' . xdebug_time_index() . '</p>';
+            if (function_exists('xdebug_is_enabled') && xdebug_is_enabled()) { 
+                echo '<p><strong>Time taken:</strong> ' . xdebug_time_index() . '</p>';
+            }
             echo '</div>';
 
             if (count($this->errors) > 0) {

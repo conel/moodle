@@ -21,14 +21,14 @@
 #cboxOverlay{background:#fff;}
 
 #colorBox{}
-    #cboxTopLeft{width:25px; height:25px; background:url(https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/border1.png) no-repeat 0 0;}
-    #cboxTopCenter{height:25px; background:url(https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/border1.png) repeat-x 0 -50px;}
-    #cboxTopRight{width:25px; height:25px; background:url(https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/border1.png) no-repeat -25px 0;}
-    #cboxBottomLeft{width:25px; height:25px; background:url(https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/border1.png) no-repeat 0 -25px;}
-    #cboxBottomCenter{height:25px; background:url(https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/border1.png) repeat-x 0 -75px;}
-    #cboxBottomRight{width:25px; height:25px; background:url(https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/border1.png) no-repeat -25px -25px;}
-    #cboxMiddleLeft{width:25px; background:url(https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/border2.png) repeat-y 0 0;}
-    #cboxMiddleRight{width:25px; background:url(https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/border2.png) repeat-y -25px 0;}
+    #cboxTopLeft{width:25px; height:25px; background:url(images/border1.png) no-repeat 0 0;}
+    #cboxTopCenter{height:25px; background:url(images/border1.png) repeat-x 0 -50px;}
+    #cboxTopRight{width:25px; height:25px; background:url(images/border1.png) no-repeat -25px 0;}
+    #cboxBottomLeft{width:25px; height:25px; background:url(images/border1.png) no-repeat 0 -25px;}
+    #cboxBottomCenter{height:25px; background:url(images/border1.png) repeat-x 0 -75px;}
+    #cboxBottomRight{width:25px; height:25px; background:url(images/border1.png) no-repeat -25px -25px;}
+    #cboxMiddleLeft{width:25px; background:url(images/border2.png) repeat-y 0 0;}
+    #cboxMiddleRight{width:25px; background:url(images/border2.png) repeat-y -25px 0;}
     #cboxContent{background:#fff;}
         #cboxLoadedContent{margin-bottom:20px;}
         #cboxTitle{position:absolute; bottom:0px; left:0; text-align:center; width:100%; color:#999;}
@@ -49,14 +49,14 @@
     !! Important Note: AlphaImageLoader src paths are relative to the HTML document,
     while regular CSS background images are relative to the CSS document.
 */
-.cboxIE #cboxTopLeft{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/internet_explorer/borderTopLeft.png, sizingMethod='scale');}
-.cboxIE #cboxTopCenter{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/internet_explorer/borderTopCenter.png, sizingMethod='scale');}
-.cboxIE #cboxTopRight{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/internet_explorer/borderTopRight.png, sizingMethod='scale');}
-.cboxIE #cboxBottomLeft{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/internet_explorer/borderBottomLeft.png, sizingMethod='scale');}
-.cboxIE #cboxBottomCenter{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/internet_explorer/borderBottomCenter.png, sizingMethod='scale');}
-.cboxIE #cboxBottomRight{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/internet_explorer/borderBottomRight.png, sizingMethod='scale');}
-.cboxIE #cboxMiddleLeft{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/internet_explorer/borderMiddleLeft.png, sizingMethod='scale');}
-.cboxIE #cboxMiddleRight{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=https://clg.conel.ac.uk/VLE/blocks/bksb/js/images/internet_explorer/borderMiddleRight.png, sizingMethod='scale');}
+.cboxIE #cboxTopLeft{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/internet_explorer/borderTopLeft.png, sizingMethod='scale');}
+.cboxIE #cboxTopCenter{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/internet_explorer/borderTopCenter.png, sizingMethod='scale');}
+.cboxIE #cboxTopRight{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/internet_explorer/borderTopRight.png, sizingMethod='scale');}
+.cboxIE #cboxBottomLeft{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/internet_explorer/borderBottomLeft.png, sizingMethod='scale');}
+.cboxIE #cboxBottomCenter{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/internet_explorer/borderBottomCenter.png, sizingMethod='scale');}
+.cboxIE #cboxBottomRight{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/internet_explorer/borderBottomRight.png, sizingMethod='scale');}
+.cboxIE #cboxMiddleLeft{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/internet_explorer/borderMiddleLeft.png, sizingMethod='scale');}
+.cboxIE #cboxMiddleRight{background:transparent; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=images/internet_explorer/borderMiddleRight.png, sizingMethod='scale');}
 
 #colorBox input {
 	text-transform:none !important;

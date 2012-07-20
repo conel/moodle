@@ -66,7 +66,7 @@ if ($user_id != 0) {
     $header .= '<br /><br /></div>';
 
     // Return from cache if set
-    Cache::init('user-'.$user_id.'-ia-html.cache', $bksb->cache_life); // cache for 1 day
+    Cache::init('user-'.$user_id.'-ia-html.cache', $bksb->cache_life);
     if (Cache::cacheFileExists()) {
         $table_html = Cache::getCache();
     } else {
@@ -187,7 +187,7 @@ if ($user_id != 0) {
 
     if ($no_students > 0) {
         foreach ($students as $student) {
-            Cache::init('user-'.$student->idnumber.'-ia-results.cache', $bksb->cache_life); // cache for 1 day
+            Cache::init('user-'.$student->idnumber.'-ia-results.cache', $bksb->cache_life);
             if (Cache::cacheFileExists()) {
                 $bksb_results = Cache::getCache();
             } else {

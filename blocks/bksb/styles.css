@@ -91,3 +91,52 @@ img.bksb_logo {
     padding:0;
     margin-bottom:4px;
 }
+
+div.tbl_invalid_users {
+	display:none;
+}
+#invalid_users_1 {
+    display:block;
+}
+#invalid_users #pagination {
+	margin-bottom:20px;
+}
+#invalid_users #pagination a {
+	display:block;
+	padding:3px;
+	border:2px solid #DDDDDD;
+	text-decoration:none;
+	float:left;
+	margin-right:6px;
+	background-color:#F5F5F5;
+	font-weight:bold;
+	color:#606060;
+}
+#invalid_users #pagination a:hover, #invalid_users #pagination a.current {
+	background-color:#E6E6E6;
+	text-decoration:none;
+	border:2px solid #A2A2A2;
+}
+#charlimitinfo {
+	font-weight:bold;
+}
+.errors {
+	color:red;
+}
+.success {
+	color:green;
+}
+#best_viewed {
+	position:absolute;
+	top:110px;
+	right:10px;
+}
+a img.user_search {
+	float:right;
+	margin-right:1px;
+	margin-left:5px;
+}
+.bksb_firstname span, .bksb_lastname span {
+	float:left;
+}
+

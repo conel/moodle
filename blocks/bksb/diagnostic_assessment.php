@@ -68,7 +68,7 @@ if ($user_id != 0) {
     $header .= '</div>';
 
     // Return from cache if set
-    Cache::init('user-'.$user_id.'-da-html.cache', $bksb->cache_life); // cache for 1 day
+    Cache::init('user-'.$user_id.'-da-html.cache', $bksb->cache_life);
     if (Cache::cacheFileExists()) {
         $table_html = Cache::getCache();
     } else {

@@ -26,10 +26,12 @@ class Cache {
     */
     public static function init($cache_filename='', $cache_life='') {
         global $CFG;
-        self::$cache_dir = $CFG->dataroot . '/cache/bksb/';
+        // Putting the BKSB cache folder in the root of MoodleData so cache files aren't deleted during upgrades etc.
+        // We want cache files to last for the lifetime that's set in BKSB settings
+        self::$cache_dir = $CFG->dataroot . '/bksb_cache/';
         if (!file_exists(self::$cache_dir) || !is_dir(self::$cache_dir)) {
             // Create bksb folder
-            mkdir($CFG->dataroot . '/cache/bksb/', 0755);
+            mkdir($CFG->dataroot . '/bksb_cache/', 0755);
         }
         if (self::$cache_dir == '') {
             $path = pathinfo(getcwd());
@@ -77,7 +79,7 @@ class Cache {
 
     public static function clearCache() {
         global $CFG;
-        self::$cache_dir = $CFG->dataroot . '/cache/bksb/';
+        self::$cache_dir = $CFG->dataroot . '/bksb_cache/';
         $files = glob(self::$cache_dir . '*.cache');
         foreach ($files as $file) unlink($file);
     }
