@@ -139,4 +139,13 @@ a img.user_search {
 .bksb_firstname span, .bksb_lastname span {
 	float:left;
 }
-
+.user_search {
+    float:right;
+}
+hr {
+    margin:0;
+    padding:0;
+    border:0;
+    border-bottom:1px solid #ccc;
+    margin-bottom:10px;
+}

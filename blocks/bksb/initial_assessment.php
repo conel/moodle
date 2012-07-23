@@ -194,6 +194,7 @@ if ($user_id != 0) {
                 $bksb_results = $bksb->getResults($student->idnumber);
                 Cache::setCache($bksb_results);
             }
+            if ($bksb_results === false) continue;
 
             $picture = $OUTPUT->user_picture($student, array('size'=>40));
             $name_html = '<a href="'.$CFG->wwwroot.'/blocks/bksb/initial_assessment.php?id='.$student->id.'&amp;course_id='.$course_id.'">'.fullname($student).'</a>';

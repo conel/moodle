@@ -3,7 +3,7 @@
 //  This page allows staff to update user details
 
 require('../../../config.php');
-include('../BksbReporting.class.php');
+require('../BksbReporting.class.php');
 $bksb = new BksbReporting();
 
 $old_username = optional_param('old_username', '', PARAM_RAW);
@@ -14,9 +14,11 @@ $action	= optional_param('action', '', PARAM_RAW);
 $row = optional_param('row', '', PARAM_RAW);
 
 require_login();
-$sitecontext = get_context_instance(CONTEXT_SYSTEM);
 
-// output HTML header
+if (!has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))) {
+    error("Only the administrator can access this page!", $CFG->wwwroot);
+}
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-AU" xml:lang="en-AU">
@@ -24,82 +26,72 @@ $sitecontext = get_context_instance(CONTEXT_SYSTEM);
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Update BKSB User</title>
 <script type="text/javascript">
-//<![CDATA[
+var jQ = jQuery.noConflict();
 function removeUpdatedRow(row) {
-		jQuery('#user_' + row).css('background-color', '#FBF586');
-		jQuery('#user_' + row).fadeOut(2000);
+	jQ('#user_' + row).css('background-color', '#FBF586');
+	jQ('#user_' + row).fadeOut(2000);
 }
 
 // Make sure it plays with other js frameworks
-jQuery("#bksb_update").submit(function() {
+jQ("#bksb_update").submit(function() {
 	/* JavaScript form checking */
 	
 	// check username is not blank
-	var username = jQuery("#update_username").val();
+	var username = jQ("#update_username").val();
 	if (username == "") {
 		alert('Username is a required field');
-		jQuery("#update_username").focus();
+		jQ("#update_username").focus();
 		return false;
 	}
 	// check firstname is not blank
-	var firstname = jQuery("#update_firstname").val();
+	var firstname = jQ("#update_firstname").val();
 	if (firstname == "") {
 		alert('Firstname is a required field');
-		jQuery("#update_firstname").focus();
+		jQ("#update_firstname").focus();
 		return false;
 	}
 	// check lastname is not blank
-	var lastname = jQuery("#update_lastname").val();
+	var lastname = jQ("#update_lastname").val();
 	if (lastname == "") {
 		alert('Lastname is a required field');
-		jQuery("#update_lastname").focus();
+		jQ("#update_lastname").focus();
 		return false;
 	}
 	
 	// Ajax update
-	var dataString = jQuery("#bksb_update").serialize();
-	
+	var dataString = jQ("#bksb_update").serialize();
 	var row_to_update = <?php echo $row; ?>;
 	
-	jQuery.ajax({
+	jQ.ajax({
 	  type: "POST",
-	  url: 'bksb_update_ajax.php',
+	  url: 'update_ajax.php',
 	  data: dataString,
 	  success: function(data) {
-		var result = jQuery.trim(data);
+		var result = jQ.trim(data);
 
 		if (result == 'Success!') {
-			jQuery('#bksb_update').hide();
-			jQuery('#update_message').html('<b class=\"success\">Successfully updated BKSB user!</b>');
-			jQuery.colorbox.resize();
-			jQuery(document).bind('cbox_closed', function(){
+			jQ('#bksb_update').hide();
+			jQ('#update_message').html('<b class=\"success\">Successfully updated BKSB user!</b>');
+			jQ.colorbox.resize();
+			jQ(document).bind('cbox_closed', function(){
 				var row = <?php echo $row; ?>;
 				removeUpdatedRow(row);
 			});
 			
 		} else {
-			jQuery('#update_message').html(data);
-			jQuery.colorbox.resize();
+			jQ('#update_message').html(data);
+			jQ.colorbox.resize();
 		}
 	  }
 	});
 	return false;
 
 });
-
-//]]>
 </script>
 </head>
 <body>
+
 <?php
-/*
-    if (has_capability('moodle/site:doanything',$sitecontext)) {  // are we god ?
-        $access_isgod = 1 ;
-    } else {
-		error('Not enough access to view this page');
-	}
- */
-	
 if ($action == 'update') {
 
     $error = FALSE;
@@ -188,7 +180,7 @@ if ($action == 'update') {
 	$username = $old_username;
 }
 
-echo '<form action="bksb_update.php" id="bksb_update" method="post">
+echo '<form action="update.php" id="bksb_update" method="post">
 <table>
 	<tr>
 		<td><b>Username:<br /><span style="font-size:0.95em; font-weight:normal;">(ID number)</span></b></td>
@@ -213,8 +205,7 @@ echo '<form action="bksb_update.php" id="bksb_update" method="post">
 	</tr>
 </table>
 </form>';
-echo '</div>';
-
 ?>
+</div>
 </body>
 </html>

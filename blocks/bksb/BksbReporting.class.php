@@ -9,7 +9,7 @@
 *
 *  @author			Nathan Kowald
 *  @since			26-08-2010
-*  @lastmodified    16-07-2012
+*  @lastmodified    23-07-2012
 *
 ******************************************************************/
 class BksbReporting {
@@ -31,7 +31,7 @@ class BksbReporting {
 
         global $CFG;
 
-        $this->debug = true; // false by default
+        $this->debug = false; // false by default
         $this->errors = array();
         if ($this->connection == null) $this->createBKSBConnection();
         $this->num_queries = 0;
@@ -680,12 +680,12 @@ class BksbReporting {
         $no_users_updated = 0;
         
         global $CFG, $DB;
-        //require_once($CFG->dirroot.'/blocks/ilp/templates/custom/dbconnect.php'); // include the connection code for CONEL's MIS db
         
         // Before we return invalid BKSB users lets search moodle user table by first and last names to see if we get matched: then update bksb
         // Add new usernames to an array to remove duplicates at the end
         foreach ($invalid_users as $key => $user) {
         
+            $old_username = $user['username'];
             $firstname = $user['firstname'];
             $lastname = $user['lastname'];
             
@@ -693,76 +693,22 @@ class BksbReporting {
                 $no_matches = count($user_match);
                 
                 if ($no_matches === 1 && $user_match->idnumber != '') {
-            
-                    
-                    // Find which bksb tables contain this username and need to be updated
-                    $user_exists = $this->checkMatchingUsername($user['username']);
-                    
                     $new_usernames[] = $user_match->idnumber;
-
-                    // bksb_Users
-                    if ($user_exists[0] === TRUE) {
-                        // Handle duplicate users - If a valid idnumber is found already in BKSB, skip updating this incorrect ID
-                        $query = sprintf("UPDATE dbo.bksb_Users SET userName = '%d' WHERE (user_id = '%d')", $user_match->idnumber, $user['id']);
-                        if (!$result = $this->connection->execute($query)) {
-                            $this->errors[] = "Query failed: $query";
-                        }
-                        $this->num_queries++;
-                        $result->Close();
-
-                    }
-                    // bksb_GroupMembership
-                    if ($user_exists[1] === TRUE) {
-                        $gm_query = sprintf("UPDATE dbo.bksb_GroupMembership SET UserName = '%d' WHERE UserName = '%s'", $user_match->idnumber, $user['username']);
-                        if (!$gm_result = $this->connection->execute($gm_query)) {
-                            $this->errors[] = "Query failed: $gm_query";
-                        }
-                        $gm_result->Close();
-                        $this->num_queries++;
-                    }
-                    // bksb_IAResults
-                    if ($user_exists[2] === TRUE) {
-                        $ia_query = sprintf("UPDATE dbo.bksb_IAResults SET UserName = '%d' WHERE UserName = '%s'", $user_match->idnumber, $user['username']);
-                        if (!$ia_result = $this->connection->execute($ia_query)) {
-                            $this->errors[] = "Query failed: $ia_query";
-                        }
-                        $ia_result->Close();
-                        $this->num_queries++;
-                    }
-                    // bksb_ICTIAResults
-                    if ($user_exists[3] === TRUE) {
-                        $ictia_query = sprintf("UPDATE dbo.bksb_ICTIAResults SET UserName = '%d' WHERE UserName = '%d'", $user_match->idnumber, $user['username']);
-                        if (!$ictia_result = $this->connection->execute($ictia_query)) {
-                            $this->errors[] = "Query failed: $ictia_query";
-                        }
-                        $ictia_result->Close();
-                        $this->num_queries++;
-                    }
-                    // bksb_Sessions
-                    if ($user_exists[4] === TRUE) {
-                        $sess_query = sprintf("UPDATE dbo.bksb_Sessions SET userName = '%d' WHERE userName = '%s'", $user_match->idnumber, $user['username']);
-                        if (!$sess_result = $this->connection->execute($sess_query)) {
-                            $this->errors[] = "Query failed: $sess_query";
-                        }
-                        $sess_query->Close();
-                        $this->num_queries++;
-                    }
-                    
+                    $this->updateBksbData($old_username, $user_match->idnumber, $firstname, $lastname);
                     // Unset invalid user as if one of these tables doesn't exist, might just mean it doesn't exist
                     unset($invalid_users[$key]);
                     $no_users_updated++;
-                    
                 }
+
             } else {
             
                 // nkowald - 2011-08-22 - No match found on first and lastname in Moodle, let's try matching on postcode and date of birth (both means this person = found)
-                // nkowald - 2011-08-22 - running from cron we need to use this
                 $user_match_idnumber = '';
                 $postcode = '';
                 $dob = '';
                 
+                // Clean postcode for matching: uppercase, strip spaces, trim edges
                 if ($user['postcode'] != '') {
-                    // Clean postcode for matching: uppercase, strip spaces, trim edges
                     $postcode = trim(str_replace(' ', '', strtoupper($user['postcode'])));
                 }
                 // Date format should be 14/12/1958 - validation on bksb means this is fine
@@ -773,86 +719,40 @@ class BksbReporting {
                 // If both postcode and dob exists, this is enough info to search for a match
                 $query = '';
                 if ($postcode != '' && $dob != '') {
-                    $query = sprintf("SELECT idnumber FROM mdl_user WHERE dob = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $dob, $postcode);
+                    $query = sprintf("SELECT idnumber, firstname, lastname FROM mdl_user WHERE dob = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $dob, $postcode);
                 } else if ($dob != '' && $postcode == '') {
                     // Search on dob and firstname
-                    $query = sprintf("SELECT idnumber FROM mdl_user WHERE dob = '%s' AND LOWER(firstname) = '%s'", $dob, strtolower($user['firstname']));
+                    $query = sprintf("SELECT idnumber, firstname, lastname FROM mdl_user WHERE dob = '%s' AND LOWER(firstname) = '%s'", $dob, strtolower($user['firstname']));
                 } else if ($postcode == '' && $dob != '') {
                     // Search on postcode and firstname
-                    $query = sprintf("SELECT idnumber FROM mdl_user WHERE LOWER(firstname) = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $user['firstname'], $postcode);
+                    $query = sprintf("SELECT idnumber, firstname, lastname FROM mdl_user WHERE LOWER(firstname) = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $user['firstname'], $postcode);
                 }
+
+                if ($query == '') continue;
                 
-                $student_id = '';
+                $new_username = '';
                 if ($matches = $DB->get_records_sql($query)) {
                     foreach($matches as $match) {
-                        $student_id = $match->idnumber;
+                        $new_username = $match->idnumber;
+                        $firstname = $match->firstname;
+                        $lastname = $match->lastname;
                     }
                 }
                 
-                if ($student_id != '') {
-                    $user_match_idnumber = $student_id;
+                if ($new_username != '') {
                     
                     // We found a match looking in EBS, great! Let's update BKSB
+                    $new_usernames[] = $new_username;
                     
-                    $new_usernames[] = $user_match_idnumber;
-                    
-                    // Find which bksb tables contain this username and need to be updated
-                    $user_exists = $this->checkMatchingUsername($user['username']);
-
-                    // bksb_Users
-                    if ($user_exists[0] === TRUE) {
-                        // Handle duplicate users - If a valid idnumber is found already in BKSB, skip updating this incorrect ID
-                        $query = sprintf("UPDATE dbo.bksb_Users SET userName = '%d' WHERE (user_id = '%d')", $user_match_idnumber, $user['id']);
-                        if (!$result = $this->connection->execute($query)) {
-                            $this->errors[] = "Query failed: $query";
-                        }
-                        $result->Close();
-                        $this->num_queries++;
-                    }
-                    // bksb_GroupMembership
-                    if ($user_exists[1] === TRUE) {
-                        $gm_query = sprintf("UPDATE dbo.bksb_GroupMembership SET UserName = '%d' WHERE UserName = '%s'", $user_match_idnumber, $user['username']);
-                        if (!$gm_result = $this->connection->execute($gm_query)) {
-                            $this->errors[] = "Query failed: $gm_query";
-                        }
-                        $gm_result->Close();
-                        $this->num_queries++;
-                    }
-                    // bksb_IAResults
-                    if ($user_exists[2] === TRUE) {
-                        $ia_query = sprintf("UPDATE dbo.bksb_IAResults SET UserName = '%d' WHERE UserName = '%s'", $user_match_idnumber, $user['username']);
-                        if (!$ia_result = $this->connection->execute($ia_query)) {
-                            $this->errors[] = "Query failed: $ia_query";
-                        }
-                        $ia_result->Close();
-                        $this->num_queries++;
-                    }
-                    // bksb_ICTIAResults
-                    if ($user_exists[3] === TRUE) {
-                        $ictia_query = sprintf("UPDATE dbo.bksb_ICTIAResults SET UserName = '%d' WHERE UserName = '%s'", $user_match_idnumber, $user['username']);
-                        if (!$ictia_result = $this->connection->execute($ictia_query)) {
-                            $this->errors[] = "Query failed: $ictia_query";
-                        }
-                        $ictia_result->Close();
-                        $this->num_queries++;
-                    }
-                    // bksb_Sessions
-                    if ($user_exists[4] === TRUE) {
-                        $sess_query = sprintf("UPDATE dbo.bksb_Sessions SET userName = '%d' WHERE userName = '%s'", $user_match_idnumber, $user['username']);
-                        if (!$sess_result = $this->connection->execute($sess_query)) {
-                            $this->errors[] = "Query failed: $sess_query";
-                        }
-                        $sess_result->Close();
-                        $this->num_queries++;
-                    }
+                    $this->updateBksbData($old_username, $new_username, $firstname, $lastname);
                     
                     // Unset invalid user as if one of these tables doesn't exist, might just mean it doesn't exist
                     unset($invalid_users[$key]);
                     $no_users_updated++;
-                    
                 }
                 
-            } // else
+            }
+
         } // foreach
         
         // Finally, return the invalids
@@ -1458,7 +1358,6 @@ class BksbReporting {
                     $this->errors[] = "Query failed: $query";
                     $updated = FALSE;
                 }
-                $result->Close();
                 $this->num_queries++;
                 
             }
@@ -1470,7 +1369,6 @@ class BksbReporting {
                     $updated = FALSE;
                 }
                 $this->num_queries++;
-                $gm_result->Close();
             }
             // bksb_IAResults
             if ($user_exists[2] === TRUE) {
@@ -1479,7 +1377,6 @@ class BksbReporting {
                     $this->errors[] = "Query failed: $ia_query";
                     $updated = FALSE;
                 }
-                $ia_result->Close();
                 $this->num_queries++;
             }
             // bksb_ICTIAResults
@@ -1489,7 +1386,6 @@ class BksbReporting {
                     $this->errors[] = "Query failed: $ictia_query";
                     $updated = FALSE;
                 }
-                $ictia_result->Close();
                 $this->num_queries++;
             }
             // bksb_Sessions
@@ -1499,7 +1395,6 @@ class BksbReporting {
                     $this->errors[] = "Query failed: $sess_query";
                     $updated = FALSE;
                 }
-                $sess_result->Close();
                 $this->num_queries++;
             }
             
@@ -1736,6 +1631,52 @@ class BksbReporting {
         }
     }
     */
+
+    public function syncUserDobAndPostcode() {
+
+        global $CFG, $DB;
+
+        $mis_server = get_config('block_bksb', 'mis_db_server');
+        $mis_user = get_config('block_bksb', 'mis_db_user');
+        $mis_password = get_config('block_bksb', 'mis_db_password');
+        $mis_db = get_config('block_bksb', 'mis_db_name');
+
+        // MIS connection
+        include($CFG->dirroot.'/lib/adodb/adodb.inc.php');
+        $mis = NewADOConnection('oci8');
+        $mis->SetFetchMode(ADODB_FETCH_ASSOC);
+        $mis->debug = false;
+        $mis->NLS_DATE_FORMAT ='DD-MON-YYYY'; // required
+        $mis->Connect($mis_server, $mis_user, $mis_password, $mis_db);
+
+        $query = "SELECT STUDENT_ID, TO_CHAR(DATE_OF_BIRTH, 'DD/MM/YYYY') AS DOB, POST_CODE FROM FES.MOODLE_PEOPLE WHERE POST_CODE != 'ZZ99 ZZZ'";
+
+        $ebs_users = array();
+        if ($users = $mis->Execute($query)) {
+            while (!$users->EOF) {
+                $ebs_users[] = array(
+                    'idnumber' => $users->fields['STUDENT_ID'], 
+                    'dob' => $users->fields['DOB'], 
+                    'postcode' => $users->fields['POST_CODE']
+                );
+                $users->moveNext();
+            }
+        }
+
+        $users_updated = 0;
+        foreach ($ebs_users as $user) {
+            // Check if user exists in Moodle users table
+            if ($exists = $DB->get_record('user', array('idnumber' => $user['idnumber']))) {
+                // Update user record with postcode and dob
+                $exists->dob = $user['dob'];
+                $exists->postcode = $user['postcode'];
+                if (update_record('user', $exists)) {
+                    $users_updated++;
+                }
+            }
+        }
+        //echo 'Number of users updated: ' . $users_updated;
+    }
 
     public function __destruct() {
 

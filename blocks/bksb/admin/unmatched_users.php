@@ -56,25 +56,8 @@ echo '<form action="unmatched_users.php" method="get">
 echo '<hr />';
 
 // If no filters are set: get results from Cache
-if ($firstname == '' && $lastname == '' && $order == '') {
-    // Return from cache if set
-    Cache::init('invalid-usernames.cache', $bksb->cache_life);
-    if (Cache::cacheFileExists()) {
-        $invalid_users = Cache::getCache();
-    } else {
-        $invalid_users = $bksb->getInvalidBksbUsers($firstname, $lastname, $order_field);
-        Cache::setCache($invalid_users);
-    }
-} else {
-    $invalid_users = $bksb->getInvalidBksbUsers($firstname, $lastname, $order_field);
-}
+$invalid_users = $bksb->getInvalidBksbUsers($firstname, $lastname, $order_field);
 $no_invalids = count($invalid_users);
-
-if ($no_invalids > 0) {
-    // nkowald - 2011-08-22 - This should NEVER be run during the day when there's a possibility
-    // someone is doing an initial assessment: changing reference during assessment
-    //$bksb->updateInvalidUsers($invalid_users);
-}
 
 $no_invalid_users = number_format(count($invalid_users));
 $username_txt = ($no_invalid_users > 1) ? 'usernames' : 'username';
@@ -135,7 +118,6 @@ for ($j=1; $j <= $no_pages; $j++) {
             <th><a href=\"unmatched_users.php?order=userName\" title=\"Order by Username\">Username</a></th>
             <th><a href=\"unmatched_users.php?order=FirstName\" title=\"Order by Firstname\">Firstname</a></th>
             <th><a href=\"unmatched_users.php?order=LastName\" title=\"Order by Lastname\">Lastname</a></th>
-            <th>&nbsp;</th>
             <th>DOB</th>
             <th>Postcode</th>
             <th>Why invalid?</th><th>Action</th>
@@ -145,21 +127,12 @@ for ($j=1; $j <= $no_pages; $j++) {
                 <td style=\"text-align:center;\">$i</td>
                 
                 <td class=\"bksb_username\"><span>".$user['username']."</span></td>
-                
-                <td class=\"bksb_firstname\"><span>".$user['firstname']."</span> 
-                <a href=\"".$CFG->wwwroot."/admin/user.php?firstname=".urlencode($user['firstname'])."\" target=\"_blank\" title=\"Search Firstname: ".$user['firstname']."\" class=\"lookup\" id=\"look_$i\"><img src=\"".$CFG->wwwroot."/blocks/bksb/js/images/search_icon.gif\" alt=\"\" width=\"16\" height=\"16\" class=\"user_search\" /></a></td>
-                
-                <td class=\"bksb_lastname\"><span>".$user['lastname']."</span> 
-                <a href=\"".$CFG->wwwroot."/admin/user.php?lastname=".urlencode($user['lastname'])."\" target=\"_blank\" title=\"Search Lastname: ".$user['lastname']."\" class=\"lookup\" id=\"look_$i\"><img src=\"".$CFG->wwwroot."/blocks/bksb/js/images/search_icon.gif\" alt=\"\" width=\"16\" height=\"16\" class=\"user_search\" /></a></td>
-                
-                <td><a href=\"".$CFG->wwwroot."/admin/user.php?firstname=".urlencode($user['firstname'])."&amp;lastname=".urlencode($user['lastname'])."\" target=\"_blank\" title=\"Search Fullname: ".$user['firstname']." ".$user['lastname']."\" class=\"lookup\" id=\"lookboth_$i\"><img src=\"".$CFG->wwwroot."/blocks/bksb/js/images/search_icon.jpg\" alt=\"\" width=\"16\" height=\"16\" class=\"search_fullname\" /></a></td>
-                
+                <td class=\"bksb_firstname\"><span>".$user['firstname']."</span></td>
+                <td class=\"bksb_lastname\"><span>".$user['lastname']."</span></td>
                 <td><span>".$user['dob']."</span></td>
                 <td><span>".$user['postcode']."</span></td>
-                
                 <td>".$user['reason']."</td>
-                
-                <td>&nbsp;<a href=\"/VLE/blocks/bksb/bksb_update.php?old_username=".urlencode($user['username'])."&amp;firstname=".urlencode($user['firstname'])."&amp;lastname=".urlencode($user['lastname'])."&amp;row=$i\" target=\"_blank\" class=\"update_user\" id=\"update_$i\">Update</a>&nbsp;</td>
+                <td>&nbsp;<a href=\"".$CFG->wwwroot."/blocks/bksb/admin/update.php?old_username=".urlencode($user['username'])."&amp;firstname=".urlencode($user['firstname'])."&amp;lastname=".urlencode($user['lastname'])."&amp;row=$i\" target=\"_blank\" class=\"update_user\" id=\"update_$i\">Update</a>&nbsp;</td>
 
                 </tr>";
             $i++;
