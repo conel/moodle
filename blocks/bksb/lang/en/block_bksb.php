@@ -65,3 +65,6 @@ $string['bksb:view_all_results'] = 'View all results';
 $string['bksb:view_own_results'] = 'View own results';
 $string['bksb:view_statistics'] = 'View statistics';
 
+/* Unmatched Users */
+$string['bksb_unmatched'] = 'Unmatched BKSB Users';
+$string['bksb_unmatched_link'] = 'View Unmatched BKSB Users (these results not visible in Moodle)';

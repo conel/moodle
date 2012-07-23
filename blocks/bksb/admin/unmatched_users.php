@@ -35,6 +35,7 @@ echo $OUTPUT->header();
 
 echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo" width="261" height="52" class="bksb_logo" />';
 
+echo '<a href="'.$CFG->wwwroot.'/admin/settings.php?section=blocksettingbksb">&lt; Back to BKSB settings</a>';
 echo "<h2>BKSB - Invalid Usernames</h2>";
 
 // Insert best viewed with Chrome or Firefox banner here.

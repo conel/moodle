@@ -140,7 +140,7 @@ $settings->add($bksb_stats);
 $ia_link = new moodle_url('/blocks/bksb/stats/initial_assessments.php');
 $ia_link_html = '<a href="'.$ia_link.'">'.get_string('bksb_stats_ia', 'block_bksb').'</a>';
 $settings->add(new admin_setting_heading(
-    'block_bksb/stats_ia', 
+    'block_bksb/bksb_stats_ia', 
     '', 
     $ia_link_html
 ));
@@ -148,8 +148,24 @@ $settings->add(new admin_setting_heading(
 $da_link = new moodle_url('/blocks/bksb/stats/diagnostic_assessments.php');
 $da_link_html = '<a href="'.$da_link.'">'.get_string('bksb_stats_da', 'block_bksb').'</a>';
 $settings->add(new admin_setting_heading(
-    'block_bksb/stats_da', 
+    'block_bksb/bksb_stats_da', 
     '', 
     $da_link_html
 ));
+
+/* Links to Unmatched Users */
+$bksb_unmatched = new admin_setting_heading(
+    'block_bksb/bksb_unmatched', 
+    get_string('bksb_unmatched', 'block_bksb')
+);
+$settings->add($bksb_unmatched);
+
+$unmatch_link = new moodle_url('/blocks/bksb/admin/unmatched_users.php');
+$unmatch_link_html = '<a href="'.$unmatch_link.'">'.get_string('bksb_unmatched_link', 'block_bksb').'</a>';
+$settings->add(new admin_setting_heading(
+    'block_bksb/bksb_unmatched_link', 
+    '', 
+    $unmatch_link_html
+));
+
 ?>

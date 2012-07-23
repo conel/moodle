@@ -3,134 +3,133 @@
 include('../BKSBReporting.class.php');
 $max_rows = 800;
 
-	if (isset($_POST['submit'])) {
-	
-     $fname = $_FILES['sel_file']['name']; 
-     $chk_ext = explode(".", $fname);
+if (isset($_POST['submit'])) {
 
-     if(strtolower($chk_ext[1]) == "csv") {
+ $fname = $_FILES['sel_file']['name']; 
+ $chk_ext = explode(".", $fname);
+
+ if(strtolower($chk_ext[1]) == "csv") {
+ 
+     $filename = $_FILES['sel_file']['tmp_name'];
+     $handle = fopen($filename, "r");
      
-         $filename = $_FILES['sel_file']['tmp_name'];
-         $handle = fopen($filename, "r");
-		 
-		 $ins_counter = 0;
-         $users = array();
-         while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-		 
-             if ($ins_counter > 0) {
-                 if ($data[0] != '') {
-                    $idnumber = $data[0];
-                    $forename = $data[1];
-                    $surname = $data[2];
-                    $dob = $data[3];
-                    $postcode = $data[4];
+     $ins_counter = 0;
+     $users = array();
+     while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+     
+         if ($ins_counter > 0) {
+             if ($data[0] != '') {
+                $idnumber = $data[0];
+                $forename = $data[1];
+                $surname = $data[2];
+                $dob = $data[3];
+                $postcode = $data[4];
 
-                    $users[$ins_counter]['idnumber'] = $idnumber;
-                    $users[$ins_counter]['forename'] = $forename;
-                    $users[$ins_counter]['surname']  = $surname;
-                    $users[$ins_counter]['dob']      = $dob;
-                    $users[$ins_counter]['postcode'] = $postcode;
-                 }
+                $users[$ins_counter]['idnumber'] = $idnumber;
+                $users[$ins_counter]['forename'] = $forename;
+                $users[$ins_counter]['surname']  = $surname;
+                $users[$ins_counter]['dob']      = $dob;
+                $users[$ins_counter]['postcode'] = $postcode;
              }
-
-            $ins_counter++;
-		 }
-    
-         fclose($handle);
-		 $message = "Successfully read ".number_format($ins_counter)." records";
-     } else {
-		 $message = "Invalid File";
-     }    
-
-     function export_csv($users, $part = false) {
-
-        $max_rows = 800;
-
-        $bksb = new BKSBReporting();
-         if ($part !== false && is_numeric($part)) {
-             // nkowald - 2012-12-22 - If part is set, cut the array down to size based on part selected
-             $no_parts = round((count($users) / $max_rows), 0); 
-             $start = 0;
-             if ($part > 1) {
-                $start = (($part - 1) * $max_rows);
-             }
-             $end = ($start + $max_rows);
-             if ($part == $no_parts) {
-                $end = count($users);
-             }
-             // Finally cut down the users array with start and end values
-             $users = array_slice($users, $start, $end);
          }
 
-         // Now handle these users
-         if (count($users) > 0) {
-            foreach ($users as $key => $value) {
-                // Look for a match in BKSB
-                if ($bksb_username = $bksb->findBksbUserName($value['idnumber'], $value['forename'], $value['surname'], $value['dob'], $value['postcode'])) {
-                    // match found: lets get IA results   
-                    // Get all categories to check
-                    foreach ($bksb->ass_cats as $cat) {
-                        if (is_array($bksb_username)) {
-                            foreach ($bksb_username as $username) {
-                                $results = $bksb->getUserResultForCat($cat, $username);
-                                if ($results) {
-                                    $users[$key]['bksb_reference'] = $username;
-                                    break;
-                                }
+        $ins_counter++;
+     }
+
+     fclose($handle);
+     $message = "Successfully read ".number_format($ins_counter)." records";
+ } else {
+     $message = "Invalid File";
+ }    
+
+ function export_csv($users, $part = false) {
+
+    $max_rows = 800;
+
+    $bksb = new BKSBReporting();
+     if ($part !== false && is_numeric($part)) {
+         // nkowald - 2012-12-22 - If part is set, cut the array down to size based on part selected
+         $no_parts = round((count($users) / $max_rows), 0); 
+         $start = 0;
+         if ($part > 1) {
+            $start = (($part - 1) * $max_rows);
+         }
+         $end = ($start + $max_rows);
+         if ($part == $no_parts) {
+            $end = count($users);
+         }
+         // Finally cut down the users array with start and end values
+         $users = array_slice($users, $start, $end);
+     }
+
+     // Now handle these users
+     if (count($users) > 0) {
+        foreach ($users as $key => $value) {
+            // Look for a match in BKSB
+            if ($bksb_username = $bksb->findBksbUserName($value['idnumber'], $value['forename'], $value['surname'], $value['dob'], $value['postcode'])) {
+                // match found: lets get IA results   
+                // Get all categories to check
+                foreach ($bksb->ass_cats as $cat) {
+                    if (is_array($bksb_username)) {
+                        foreach ($bksb_username as $username) {
+                            $results = $bksb->getUserResultForCat($cat, $username);
+                            if ($results) {
+                                $users[$key]['bksb_reference'] = $username;
+                                break;
                             }
-                        } else {
-                            $users[$key]['bksb_reference'] = $bksb_username;
-                            $results = $bksb->getUserResultForCat($cat, $bksb_username);
                         }
-                        $users[$key][$cat] = ($results != '') ? strip_tags($results) : '';
+                    } else {
+                        $users[$key]['bksb_reference'] = $bksb_username;
+                        $results = $bksb->getUserResultForCat($cat, $bksb_username);
                     }
-                } else {
-                    $users[$key]['bksb_reference'] = 'Not Found';
-                    foreach ($bksb->ass_cats as $cat) {
-                        $users[$key][$cat] = '';
-                    }
+                    $users[$key][$cat] = ($results != '') ? strip_tags($results) : '';
+                }
+            } else {
+                $users[$key]['bksb_reference'] = 'Not Found';
+                foreach ($bksb->ass_cats as $cat) {
+                    $users[$key][$cat] = '';
                 }
             }
-         }
-
-         // Finally, let's see what's in our array of users: should be as before plus IA details
-        $csv_output = "PERSON_CODE,FORENAME,SURNAME,DATE_OF_BIRTH,POSTCODE,BKSB_REFERENCE," . strtoupper(implode(',', $bksb->ass_cats)) . "\n"; 
-        foreach ($users as $user) {
-            $csv_output .= implode(',', $user) . "\n";
         }
-        /*
-        echo '<pre>';
-        var_dump($csv_output);
-        echo '</pre>';
-        exit;
-         */
-        $filename = "IA_Results_".date("Y-m-d", time());
-        if ($part !== false && is_numeric($part)) {
-            $filename .= '_'.$part.'-of-'.$no_parts;
-        }
-        header("Content-type: application/vnd.ms-excel");
-        header("Content-disposition: csv" . date("Y-m-d") . ".csv");
-        header( "Content-disposition: filename=".$filename.".csv");
-        print $csv_output;
-        exit; 
+     }
 
+     // Finally, let's see what's in our array of users: should be as before plus IA details
+    $csv_output = "PERSON_CODE,FORENAME,SURNAME,DATE_OF_BIRTH,POSTCODE,BKSB_REFERENCE," . strtoupper(implode(',', $bksb->ass_cats)) . "\n"; 
+    foreach ($users as $user) {
+        $csv_output .= implode(',', $user) . "\n";
     }
+    /*
+    echo '<pre>';
+    var_dump($csv_output);
+    echo '</pre>';
+    exit;
+     */
+    $filename = "IA_Results_".date("Y-m-d", time());
+    if ($part !== false && is_numeric($part)) {
+        $filename .= '_'.$part.'-of-'.$no_parts;
+    }
+    header("Content-type: application/vnd.ms-excel");
+    header("Content-disposition: csv" . date("Y-m-d") . ".csv");
+    header( "Content-disposition: filename=".$filename.".csv");
+    print $csv_output;
+    exit; 
 
-    $large_export = false;
+}
 
-    if (isset($_POST['part']) && is_numeric($_POST['part'])) {
-        // Export CSV based on chosen part
-        export_csv($users, $_POST['part']);
+$large_export = false;
 
+if (isset($_POST['part']) && is_numeric($_POST['part'])) {
+    // Export CSV based on chosen part
+    export_csv($users, $_POST['part']);
+} else {
+    // nkowald - 2011-12-22 - If there's more than $max_rows records, let the user choose which $max_rows to get
+    if (count($users) <= $max_rows) {
+        export_csv($users);
     } else {
-
-        // nkowald - 2011-12-22 - If there's more than $max_rows records, let the user choose which $max_rows to get
-        if (count($users) <= $max_rows) {
-            export_csv($users);
-        } else {
-            $large_export = true;
-        }
+        $large_export = true;
     }
+}
+
 }
 	
 ?>
@@ -140,7 +139,7 @@ $max_rows = 800;
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="robots" content="noindex" />
 <meta name="googlebot" content="noindex" />
-<script type="text/javascript" src="/VLE/theme/conel/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="/blocks/bksb/js/jquery-1.7.2.min.js"></script>
 <title>BKSB Initial Assessment Resuts CSV Exporter</title>
 </head>
 
@@ -200,7 +199,7 @@ $(document).ready(function() {
 ?>
 	<tr>
 		<td>&nbsp;</td>		
-		<td><input type="submit" name="submit" value="Get CSV with IA Results" class="submit" /></td>		
+		<td><input type="submit" name="submit" value="Generate CSV with IA Results" class="submit" /></td>		
 	</tr>
 </table>
 </fieldset>

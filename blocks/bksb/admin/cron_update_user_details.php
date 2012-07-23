@@ -1,33 +1,38 @@
 <?php
 
-	if ($_SERVER["REMOTE_ADDR"] != $_SERVER["SERVER_ADDR"]) die("Cron script can't be run directly. It only comes out at night (so not to mess with active BKSB assessment sessions).");
-	
-    require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php'); // global moodle config file.
-    require(dirname(dirname(__FILE__)).'/BksbReporting.class.php');
-    $bksb = new BksbReporting();
-	
-    // Time how long it takes to update and echo the output
-    $time = microtime();
-    $time = explode(' ', $time);
-    $time = $time[1] + $time[0];
-    $begintime = $time;
+$sapi_type = php_sapi_name();
+$method = substr($sapi_type, 0, 3);
+if ($method != 'cli') {
+    die("Cron script can't be run directly. It only comes out at night (so not to mess with active BKSB assessment sessions).");
+}
 
-	// First part of cron is to sync Moodle user postcodes and dob with EBS
-    $bksb->syncUserDobAndPostcode();
+define('CLI_SCRIPT', true);
+require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php'); // global moodle config file.
+require(dirname(dirname(__FILE__)).'/BksbReporting.class.php');
+$bksb = new BksbReporting();
 
-	// Second part of cron is to find all invalid BKSB users and then update all matched users
-	$invalid_users = $bksb->getInvalidBksbUsers();
-	$no_invalids = count($invalid_users);
+// Time how long it takes to update and echo the output
+$time = microtime();
+$time = explode(' ', $time);
+$time = $time[1] + $time[0];
+$begintime = $time;
 
-	if ($no_invalids > 0) {
-		$bksb->updateInvalidUsers($invalid_users);
-	}
+// First part of cron is to sync Moodle user postcodes and dob with EBS
+$bksb->syncUserDobAndPostcode();
 
-    $time = microtime();
-    $time = explode(" ", $time);
-    $time = $time[1] + $time[0];
-    $endtime = $time;
-    $totaltime = round(($endtime - $begintime), 2);
-    echo '<pre>It took ' .$totaltime. ' seconds to sync users.</pre>';
+// Second part of cron is to find all invalid BKSB users and then update all matched users
+$invalid_users = $bksb->getInvalidBksbUsers();
+$no_invalids = count($invalid_users);
+
+if ($no_invalids > 0) {
+    $bksb->updateInvalidUsers($invalid_users);
+}
+
+$time = microtime();
+$time = explode(" ", $time);
+$time = $time[1] + $time[0];
+$endtime = $time;
+$totaltime = round(($endtime - $begintime), 2);
+echo "The BKSB cron took $totaltime seconds to run." . PHP_EOL;
 
 ?>

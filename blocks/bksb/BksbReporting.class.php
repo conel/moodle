@@ -17,8 +17,8 @@ class BksbReporting {
     private $server;
     private $password;
     private $selected_db;
+    private $num_queries;
 
-    public $num_queries;
     public $errors;
     public $debug;
     public $connection;
@@ -758,12 +758,12 @@ class BksbReporting {
         // Finally, return the invalids
         if ($no_users_updated > 0) {
             $user_txt = ($no_users_updated > 1) ? 'users' : 'user';
-            echo "<pre>Updated $no_users_updated $user_txt!</pre>";
+            echo "Updated $no_users_updated $user_txt!" . PHP_EOL;
             
             // Remove duplicates
             $this->removeDuplicateUsers(TRUE, $new_usernames);
         } else {
-            echo '<pre>No users were updated</pre>';
+            echo "No users were updated" . PHP_EOL;
         }
     }
     
@@ -966,209 +966,182 @@ class BksbReporting {
         
     }
     
-    public function getNameFromUsername($username = '') {
-        
-        if ($username != '') {
-            // Escape single quotes
-            $username = str_replace("'", "''", $username);
-            $query = sprintf("SELECT FirstName, LastName FROM bksb_Users WHERE userName = '%s'", $username);
-            
-            if ($result = $this->connection->execute($query)) {
-                $this->num_queries++;
-
-                $name = array();
-                while (!$result->EOF) {
-                    $name['firstname'] = ucwords($result->fields['FirstName']->value);
-                    $name['lastname'] = ucwords($result->fields['LastName']->value);
-                    $result->MoveNext();
-                }
-                
-                $result->Close();
-                return $name;
-            }
-            
-        } else {
-            return false;
-        }
-
-    }
-    
     public function getIAForGroup($group_name='', $ia_type = '',  $unix_start = '', $unix_end = '') {
         
         if ($group_name == '' || $ia_type == '') return false;
 
-            // get users for given group
-            if ($users = $this->getUsersForGroup($group_name)) {
-                // convert to csv
-                $group_users = implode(',', $users);
-                $group_users = "'" . str_replace(",", "','", $group_users) . "'";
+        // get users for given group
+        if ($users = $this->getUsersForGroup($group_name)) {
+            // convert to csv
+            $group_users = implode(',', $users);
+            $group_users = "'" . str_replace(",", "','", $group_users) . "'";
+        } else {
+            return false;
+        }
+        
+        $group_sessions = '';
+        // Now we have a list of the users from the group, if valid start and end date given, cut down to users with a complete session between date range
+        if (($unix_start != '' && is_numeric($unix_start)) && ($unix_end != '' && is_numeric($unix_end))) {
+        
+            /* 
+            Convert start into SQL smalldatetime format
+             In Microsoft SQL Server Management Studio Express the date displays as d/m/Y but
+             it actually requires you to use m/d/Y format in the query.
+            */ 
+            
+            $sdt_start = date('m/d/Y H:i:s', $unix_start);
+            $sdt_end = date('m/d/Y H:i:s', $unix_end);
+            
+            $query = sprintf("SELECT session_id FROM bksb_Sessions WHERE (status = 'Complete') AND (dateCreated >= '%s') AND (dateCreated <= '%s') AND userName IN (%s)",
+                $sdt_start,
+                $sdt_end,
+                $group_users
+            );
+            
+            if ($result = $this->connection->execute($query)) {
+                $this->num_queries++;
+                $sessions = array();
+
+                while (!$result->EOF) {
+                    $sessions[] = $result->fields['session_id']->value;
+                    $result->MoveNext();
+                }
+                $result->Close();
+                
+                // Finally, update group_users to be the filtered list of users 
+                $group_sessions = implode(',', $sessions);
+                $group_sessions = "'" . str_replace(",", "','", $group_sessions) . "'";
+            }
+            
+        }
+        
+        // Use this query if English or Maths selected
+        if ($ia_type == 'English' || $ia_type == 'Mathematics') {
+
+            if ($group_sessions != '') {
+                //$query = "SELECT UserName, Result FROM dbo.bksb_IAResults WHERE (Session_id IN ($group_sessions)) ORDER BY UserName";
+                $query = sprintf("SELECT iar.UserName, u.FirstName, u.LastName, iar.Result FROM bksb_IAResults AS iar LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(iar.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (iar.Session_id IN (%s)) ORDER BY iar.UserName", $group_sessions);
             } else {
-                return false;
+                //$query = "SELECT UserName, Result FROM dbo.bksb_IAResults WHERE (UserName IN ($group_users)) ORDER BY UserName";
+                $query = sprintf("SELECT iar.UserName, u.FirstName, u.LastName, iar.Result FROM bksb_IAResults AS iar LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(iar.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (iar.UserName IN (%s)) ORDER BY iar.UserName", $group_users);
             }
-            
-            $group_sessions = '';
-            // Now we have a list of the users from the group, if valid start and end date given, cut down to users with a complete session between date range
-            if (($unix_start != '' && is_numeric($unix_start)) && ($unix_end != '' && is_numeric($unix_end))) {
-            
-                /* 
-                Convert start into SQL smalldatetime format
-                 In Microsoft SQL Server Management Studio Express the date displays as d/m/Y but
-                 it actually requires you to use m/d/Y format in the query.
-                */ 
-                
-                $sdt_start = date('m/d/Y H:i:s', $unix_start);
-                $sdt_end = date('m/d/Y H:i:s', $unix_end);
-                
-                $query = sprintf("SELECT session_id FROM bksb_Sessions WHERE (status = 'Complete') AND (dateCreated >= '%s') AND (dateCreated <= '%s') AND userName IN (%s)",
-                    $sdt_start,
-                    $sdt_end,
-                    $group_users
-                );
-                
-                if ($result = $this->connection->execute($query)) {
-                    $this->num_queries++;
-                    $sessions = array();
 
-                    while (!$result->EOF) {
-                        $sessions[] = $result->fields['session_id']->value;
-                        $result->MoveNext();
-                    }
-                    $result->Close();
-                    
-                    // Finally, update group_users to be the filtered list of users 
-                    $group_sessions = implode(',', $sessions);
-                    $group_sessions = "'" . str_replace(",", "','", $group_sessions) . "'";
+            if ($result = $this->connection->execute($query)) {
+                $this->num_queries++;
+                $user_ass = array();
+
+                while (!$result->EOF) {
+                    $username = $result->fields['UserName']->value;
+                    $user_ass[$username]['user_name'] = $username;
+                    $user_ass[$username]['name'] = $result->fields['FirstName']->value . ' ' . $result->fields['LastName']->value;
+                    $user_ass[$username]['results'][] = $result->fields['Result']->value;
+                    $result->MoveNext();
                 }
                 
+                // Set total counts
+                $user_ass['total_literacy_e2'] = $user_ass['total_literacy_e3'] = $user_ass['total_literacy_l1'] = $user_ass['total_literacy_l2'] = $user_ass['total_literacy_l3'] = 0;
+                $user_ass['total_numeracy_e2'] = $user_ass['total_numeracy_e3'] = $user_ass['total_numeracy_l1'] = $user_ass['total_numeracy_l2'] = $user_ass['total_numeracy_l3'] = 0;
+                
+                foreach ($user_ass as $user) {
+                
+                    $username = $user['user_name'];
+
+                    // English E2
+                    $user_ass[$username]['literacy_e2'] = (in_array('English Entry 2', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('English Entry 2', $user_ass[$username]['results'])) { $user_ass['total_literacy_e2']++; }
+                    // English E3
+                    $user_ass[$username]['literacy_e3'] = (in_array('English Entry 3', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('English Entry 3', $user_ass[$username]['results'])) { $user_ass['total_literacy_e3']++; }
+                    // English L1
+                    $user_ass[$username]['literacy_l1'] = (in_array('English Level 1', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('English Level 1', $user_ass[$username]['results'])) { $user_ass['total_literacy_l1']++; }
+                    // English L2
+                    $user_ass[$username]['literacy_l2'] = (in_array('English Level 2', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('English Level 2', $user_ass[$username]['results'])) { $user_ass['total_literacy_l2']++; }
+                    // English L3
+                    $user_ass[$username]['literacy_l3'] = (in_array('English Level 3', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('English Level 3', $user_ass[$username]['results'])) { $user_ass['total_literacy_l3']++; }
+
+                    // Mathematics E2
+                    $user_ass[$username]['numeracy_e2'] = (in_array('Mathematics Entry 2', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('Mathematics Entry 2', $user_ass[$username]['results'])) { $user_ass['total_numeracy_e2']++; }
+                    // Mathematics E3
+                    $user_ass[$username]['numeracy_e3'] = (in_array('Mathematics Entry 3', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('Mathematics Entry 3', $user_ass[$username]['results'])) { $user_ass['total_numeracy_e3']++; }
+                    // Mathematics L1
+                    $user_ass[$username]['numeracy_l1'] = (in_array('Mathematics Level 1', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('Mathematics Level 1', $user_ass[$username]['results'])) { $user_ass['total_numeracy_l1']++; }
+                    // Mathematics L2
+                    $user_ass[$username]['numeracy_l2'] = (in_array('Mathematics Level 2', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('Mathematics Level 2', $user_ass[$username]['results'])) { $user_ass['total_numeracy_l2']++; }
+                    // Mathematics L3
+                    $user_ass[$username]['numeracy_l3'] = (in_array('Mathematics Level 3', $user_ass[$username]['results'])) ? 'Yes' : '-';
+                    if (in_array('Mathematics Level 3', $user_ass[$username]['results'])) { $user_ass['total_numeracy_l3']++; }
+
+                }
+                
+                $result->Close();
+                // return all user initial assessments for this given group
+                return $user_ass;
             }
+        } else if ($ia_type == 'ICT') {
             
-            // Use this query if English or Maths selected
-            if ($ia_type == 'English' || $ia_type == 'Mathematics') {
-
-                if ($group_sessions != '') {
-                    //$query = "SELECT UserName, Result FROM dbo.bksb_IAResults WHERE (Session_id IN ($group_sessions)) ORDER BY UserName";
-                    $query = sprintf("SELECT iar.UserName, u.FirstName, u.LastName, iar.Result FROM bksb_IAResults AS iar LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(iar.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (iar.Session_id IN (%s)) ORDER BY iar.UserName", $group_sessions);
-                } else {
-                    //$query = "SELECT UserName, Result FROM dbo.bksb_IAResults WHERE (UserName IN ($group_users)) ORDER BY UserName";
-                    $query = sprintf("SELECT iar.UserName, u.FirstName, u.LastName, iar.Result FROM bksb_IAResults AS iar LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(iar.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (iar.UserName IN (%s)) ORDER BY iar.UserName", $group_users);
-                }
-
-                if ($result = $this->connection->execute($query)) {
-                    $this->num_queries++;
-                        $user_ass = array();
-
-                        while (!$result->EOF) {
-                            $username = $result->fields['UserName']->value;
-                            $user_ass[$username]['user_name'] = $username;
-                            $user_ass[$username]['name'] = $result->fields['FirstName']->value . ' ' . $result->fields['LastName']->value;
-                            $user_ass[$username]['results'][] = $result->fields['Result']->value;
-                            $result->MoveNext();
-                        }
-                        
-                        // Set total counts
-                        $user_ass['total_literacy_e2'] = $user_ass['total_literacy_e3'] = $user_ass['total_literacy_l1'] = $user_ass['total_literacy_l2'] = $user_ass['total_literacy_l3'] = 0;
-                        $user_ass['total_numeracy_e2'] = $user_ass['total_numeracy_e3'] = $user_ass['total_numeracy_l1'] = $user_ass['total_numeracy_l2'] = $user_ass['total_numeracy_l3'] = 0;
-                        
-                        foreach ($user_ass as $user) {
-                        
-                            $username = $user['user_name'];
-
-                            // English E2
-                            $user_ass[$username]['literacy_e2'] = (in_array('English Entry 2', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('English Entry 2', $user_ass[$username]['results'])) { $user_ass['total_literacy_e2']++; }
-                            // English E3
-                            $user_ass[$username]['literacy_e3'] = (in_array('English Entry 3', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('English Entry 3', $user_ass[$username]['results'])) { $user_ass['total_literacy_e3']++; }
-                            // English L1
-                            $user_ass[$username]['literacy_l1'] = (in_array('English Level 1', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('English Level 1', $user_ass[$username]['results'])) { $user_ass['total_literacy_l1']++; }
-                            // English L2
-                            $user_ass[$username]['literacy_l2'] = (in_array('English Level 2', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('English Level 2', $user_ass[$username]['results'])) { $user_ass['total_literacy_l2']++; }
-                            // English L3
-                            $user_ass[$username]['literacy_l3'] = (in_array('English Level 3', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('English Level 3', $user_ass[$username]['results'])) { $user_ass['total_literacy_l3']++; }
-
-                            // Mathematics E2
-                            $user_ass[$username]['numeracy_e2'] = (in_array('Mathematics Entry 2', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('Mathematics Entry 2', $user_ass[$username]['results'])) { $user_ass['total_numeracy_e2']++; }
-                            // Mathematics E3
-                            $user_ass[$username]['numeracy_e3'] = (in_array('Mathematics Entry 3', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('Mathematics Entry 3', $user_ass[$username]['results'])) { $user_ass['total_numeracy_e3']++; }
-                            // Mathematics L1
-                            $user_ass[$username]['numeracy_l1'] = (in_array('Mathematics Level 1', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('Mathematics Level 1', $user_ass[$username]['results'])) { $user_ass['total_numeracy_l1']++; }
-                            // Mathematics L2
-                            $user_ass[$username]['numeracy_l2'] = (in_array('Mathematics Level 2', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('Mathematics Level 2', $user_ass[$username]['results'])) { $user_ass['total_numeracy_l2']++; }
-                            // Mathematics L3
-                            $user_ass[$username]['numeracy_l3'] = (in_array('Mathematics Level 3', $user_ass[$username]['results'])) ? 'Yes' : '-';
-                            if (in_array('Mathematics Level 3', $user_ass[$username]['results'])) { $user_ass['total_numeracy_l3']++; }
-
-                        }
-                        
-                        $result->Close();
-                        // return all user initial assessments for this given group
-                        return $user_ass;
-                }
-            } else if ($ia_type == 'ICT') {
+            if ($group_sessions != '') {
+                $query = sprintf("SELECT ict.UserName, u.FirstName, u.LastName, ict.WordProcessing, ict.Spreadsheets, ict.Databases, ict.DesktopPublishing, ict.Presentation, ict.Email, ict.General, ict.Internet FROM bksb_ICTIAResults AS ict LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(ict.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (ict.session_id IN (%s)) ORDER BY ict.UserName", $group_sessions);
                 
-                if ($group_sessions != '') {
-                    $query = sprintf("SELECT ict.UserName, u.FirstName, u.LastName, ict.WordProcessing, ict.Spreadsheets, ict.Databases, ict.DesktopPublishing, ict.Presentation, ict.Email, ict.General, ict.Internet FROM bksb_ICTIAResults AS ict LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(ict.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (ict.session_id IN (%s)) ORDER BY ict.UserName", $group_sessions);
+            } else {
+                $query = sprintf("SELECT ict.UserName, u.FirstName, u.LastName, ict.WordProcessing, ict.Spreadsheets, ict.Databases, ict.DesktopPublishing, ict.Presentation, ict.Email, ict.General, ict.Internet FROM bksb_ICTIAResults AS ict LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(ict.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (ict.UserName IN (%s)) ORDER BY ict.UserName", $group_users);
+            }
+
+                
+            if ($result = $this->connection->execute($query)) {
+                $this->num_queries++;
+            
+                $user_ass = array();
+
+                while (!$result->EOF) {
+                
+                    $valid_types = array('word_processing', 'spreadsheets', 'databases', 'desktop_publishing', 'presentation', 'email', 'general', 'internet');
                     
-                } else {
-                    $query = sprintf("SELECT ict.UserName, u.FirstName, u.LastName, ict.WordProcessing, ict.Spreadsheets, ict.Databases, ict.DesktopPublishing, ict.Presentation, ict.Email, ict.General, ict.Internet FROM bksb_ICTIAResults AS ict LEFT OUTER JOIN bksb_Users AS u ON LTRIM(RTRIM(ict.UserName)) = LTRIM(RTRIM(u.userName)) WHERE (ict.UserName IN (%s)) ORDER BY ict.UserName", $group_users);
+                    $username = $result->fields['UserName']->value;
+                    $user_ass[$username]['user_name'] = $username;
+                    $user_ass[$username]['name'] = $result->fields['FirstName']->value . ' ' . $result->fields['LastName']->value;
+                    $user_ass[$username]['results']['word_processing'] = $result->fields['WordProcessing']->value;
+                    $user_ass[$username]['results']['spreadsheets'] = $result->fields['Spreadsheets']->value;
+                    $user_ass[$username]['results']['databases'] = $result->fields['Databases']->value;
+                    $user_ass[$username]['results']['desktop_publishing'] = $result->fields['DesktopPublishing']->value;
+                    $user_ass[$username]['results']['presentation'] = $result->fields['Presentation']->value;
+                    $user_ass[$username]['results']['email'] = $result->fields['Email']->value;
+                    $user_ass[$username]['results']['general'] = $result->fields['General']->value;
+                    $user_ass[$username]['results']['internet'] = $result->fields['Internet']->value;
+
+                    $result->MoveNext();
                 }
-
-                    
-                if ($result = $this->connection->execute($query)) {
-                    $this->num_queries++;
                 
-                    $user_ass = array();
-
-                    while (!$result->EOF) {
+                // Set total counts
+                //$user_ass['total_word_processing'] = $user_ass['total_spreadsheets'] = $user_ass['total_databases'] = $user_ass['total_desktop_publishing'] = $user_ass['total_presentation'] = $user_ass['total_email'] = $user_ass['total_general'] = $user_ass['total_internet'] = 0;
+            
+                // Strip HTML from results where they exist
+                foreach($user_ass as $key => $user) {
                     
-                        $valid_types = array('word_processing', 'spreadsheets', 'databases', 'desktop_publishing', 'presentation', 'email', 'general', 'internet');
-                        
-                        $username = $result->fields['UserName']->value;
-                        $user_ass[$username]['user_name'] = $username;
-                        $user_ass[$username]['name'] = $result->fields['FirstName']->value . ' ' . $result->fields['LastName']->value;
-                        $user_ass[$username]['results']['word_processing'] = $result->fields['WordProcessing']->value;
-                        $user_ass[$username]['results']['spreadsheets'] = $result->fields['Spreadsheets']->value;
-                        $user_ass[$username]['results']['databases'] = $result->fields['Databases']->value;
-                        $user_ass[$username]['results']['desktop_publishing'] = $result->fields['DesktopPublishing']->value;
-                        $user_ass[$username]['results']['presentation'] = $result->fields['Presentation']->value;
-                        $user_ass[$username]['results']['email'] = $result->fields['Email']->value;
-                        $user_ass[$username]['results']['general'] = $result->fields['General']->value;
-                        $user_ass[$username]['results']['internet'] = $result->fields['Internet']->value;
-
-                        $result->MoveNext();
-                    }
-                    
-                    // Set total counts
-                    //$user_ass['total_word_processing'] = $user_ass['total_spreadsheets'] = $user_ass['total_databases'] = $user_ass['total_desktop_publishing'] = $user_ass['total_presentation'] = $user_ass['total_email'] = $user_ass['total_general'] = $user_ass['total_internet'] = 0;
-                
-                    // Strip HTML from results where they exist
-                    foreach($user_ass as $key => $user) {
-                        
-                        foreach ($user['results'] as $type => $value) {
-                            if (in_array($type, $valid_types)) {
-                                if (strstr($value, '<br />')) {
-                                    $wp = explode('<br />', $value);
-                                    $user_ass[$key]['results'][$type] = $wp[0];
-                                }
+                    foreach ($user['results'] as $type => $value) {
+                        if (in_array($type, $valid_types)) {
+                            if (strstr($value, '<br />')) {
+                                $wp = explode('<br />', $value);
+                                $user_ass[$key]['results'][$type] = $wp[0];
                             }
                         }
-                    
                     }
-
-                    $result->Close();
-                    return $user_ass;
-                    
+                
                 }
-            
+
+                $result->Close();
+                return $user_ass;
+                
             }
-            
+        
+        }
+        
     }
     
 
@@ -1274,7 +1247,10 @@ class BksbReporting {
             if ($result = $this->connection->execute($query1)) {
                 $this->num_queries++;
                 while (!$result->EOF) {
-                    $duplicate_users[] = array('username' => $result->fields['userName']->value, 'no_duplicates' => $result->fields['occurrences']->value);
+                    $duplicate_users[] = array(
+                        'username' => $result->fields['userName']->value, 
+                        'no_duplicates' => $result->fields['occurrences']->value
+                    );
                     $result->MoveNext();
                 }
                 $result->Close();
@@ -1359,7 +1335,6 @@ class BksbReporting {
                     $updated = FALSE;
                 }
                 $this->num_queries++;
-                
             }
             // bksb_GroupMembership
             if ($user_exists[1] === TRUE) {
@@ -1415,28 +1390,6 @@ class BksbReporting {
         }
     }
     
-    // Get user ids of E-Learning Technologists
-    // Check if given user is an E-learning "technologist"
-    public function is_elt($userid = '') {
-        global $DB, $CFG;
-        if ($userid != '') {
-            $query = "SELECT DISTINCT userid FROM ".$CFG->prefix."role_assignments WHERE roleid = (SELECT id FROM ".$CFG->prefix."role WHERE shortname = 'elearningtechnologist')";
-            $user_ids = array();
-            if ($users = $DB->get_records_sql($query)) {
-                foreach ($users as $user) {
-                    $user_ids[] = $user->userid;
-                }
-            }
-            if (in_array($userid, $user_ids)) {
-                return TRUE;
-            } else {
-                return FALSE;
-            }
-        } else {
-            return FALSE;
-        }
-    }
-    
     public function findBksbUserName($idnumber='', $forename='', $surname='', $dob='', $postcode='') {
 
         $username = '';
@@ -1453,9 +1406,9 @@ class BksbReporting {
                 $result->MoveNext();
             }
             if ($username != '') {
+                $result->Close();
                 return $username;
             }
-            $result->Close();
         }
         $query = sprintf("SELECT userName FROM dbo.bksb_Users WHERE FirstName = '%s' AND LastName = '%s' ORDER BY user_id DESC", $forename, $surname);	
         if ($result = $this->connection->execute($query)) {
@@ -1466,9 +1419,9 @@ class BksbReporting {
                 $result->MoveNext();
             }
             if (count($usernames) > 0) {
+                $result->Close();
                 return $usernames;
             }
-            $result->Close();
         }
         // change format of dob
         $query = sprintf("SELECT userName FROM dbo.bksb_Users WHERE (REPLACE(PostcodeA, ' ', '') = '%s') AND (CONVERT(VARCHAR(10), DOB, 103) = '%s')", $postcode, $dob);
@@ -1479,9 +1432,9 @@ class BksbReporting {
                 $result->MoveNext();
             }
             if ($username != '') {
+                $result->Close();
                 return $username;
             }
-            $result->Close();
         }
         // If we get here, we haven't found a match so return false
         return false;

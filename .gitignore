@@ -26,3 +26,5 @@ CVS
 /.buildpath
 /.cache
 phpunit.xml
+/blocks/bksb/admin/cron.bat
+/blocks/bksb/admin/cron.log
