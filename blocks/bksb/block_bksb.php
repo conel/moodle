@@ -41,7 +41,7 @@
                 return $this->content;
             }
 
-            global $USER, $COURSE;
+            global $USER, $COURSE, $CFG;
             $this->content = new stdClass;
 
             $user_id = $USER->id;

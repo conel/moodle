@@ -717,13 +717,13 @@ class BksbReporting {
                 // If both postcode and dob exists, this is enough info to search for a match
                 $query = '';
                 if ($postcode != '' && $dob != '') {
-                    $query = sprintf("SELECT idnumber, firstname, lastname FROM mdl_user WHERE dob = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $dob, $postcode);
+                    $query = sprintf("SELECT idnumber, firstname, lastname FROM %suser WHERE dob = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $CFG->prefix, $dob, $postcode);
                 } else if ($dob != '' && $postcode == '') {
                     // Search on dob and firstname
-                    $query = sprintf("SELECT idnumber, firstname, lastname FROM mdl_user WHERE dob = '%s' AND LOWER(firstname) = '%s'", $dob, strtolower($user['firstname']));
+                    $query = sprintf("SELECT idnumber, firstname, lastname FROM %suser WHERE dob = '%s' AND LOWER(firstname) = '%s'", $dob, $CFG->prefix, strtolower($user['firstname']));
                 } else if ($postcode == '' && $dob != '') {
                     // Search on postcode and firstname
-                    $query = sprintf("SELECT idnumber, firstname, lastname FROM mdl_user WHERE LOWER(firstname) = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $user['firstname'], $postcode);
+                    $query = sprintf("SELECT idnumber, firstname, lastname FROM %suser WHERE LOWER(firstname) = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $CFG->prefix, $user['firstname'], $postcode);
                 }
 
                 if ($query == '') continue;
@@ -808,7 +808,7 @@ class BksbReporting {
             while (!$result->EOF) {
 
                 // Do checks here instead of later
-                $username = $result->fields['userName']->value;
+                $username = addslashes($result->fields['userName']->value);
                 $invalid = false;
                 
                 if (!is_numeric($username)) {
@@ -825,11 +825,11 @@ class BksbReporting {
                 if ($invalid === true) {
                     $invalid_users[] = array(
                     'username' => $username, 
-                    'firstname' => $result->fields['FirstName']->value,
-                    'lastname' => $result->fields['LastName']->value,
+                    'firstname' => addslashes($result->fields['FirstName']->value),
+                    'lastname' => addslashes($result->fields['LastName']->value),
                     'dob' => ($result->fields['DOB']->value != '01/01/1900') ? $result->fields['DOB']->value : "",
                     'postcode' => ($result->fields['Postcode']->value != '') ? strtoupper($result->fields['Postcode']->value) : "",
-                    'id' => $result->fields['user_id']->value,
+                    'id' => addslashes($result->fields['user_id']->value),
                     'reason' => $reason
                     );
                 }
@@ -1301,8 +1301,6 @@ class BksbReporting {
                             $no_dupes_deleted++;
                         }
                     }
-                    $result->Close();
-                    
                 }
                 
             }
@@ -1310,7 +1308,7 @@ class BksbReporting {
             // Display how many duplicate users were removed
             if ($notify === TRUE) {
                 $user_txt = ($no_dupes_deleted > 1) ? 'users' : 'user';
-                echo "<pre>Removed $no_dupes_deleted duplicate $user_txt</pre>";
+                echo "Removed $no_dupes_deleted duplicate $user_txt" . PHP_EOL;
             }
             
         }
@@ -1621,7 +1619,7 @@ class BksbReporting {
                 // Update user record with postcode and dob
                 $exists->dob = $user['dob'];
                 $exists->postcode = $user['postcode'];
-                if (update_record('user', $exists)) {
+                if ($DB->update_record('user', $exists)) {
                     $users_updated++;
                 }
             }
