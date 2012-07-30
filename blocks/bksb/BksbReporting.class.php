@@ -687,15 +687,16 @@ class BksbReporting {
             $firstname = $user['firstname'];
             $lastname = $user['lastname'];
             
-            if ($user_match = $DB->get_record('user', array('firstname' => $firstname, 'lastname' => $lastname))) {
-                $no_matches = count($user_match);
-                
-                if ($no_matches === 1 && $user_match->idnumber != '') {
-                    $new_usernames[] = $user_match->idnumber;
-                    $this->updateBksbData($old_username, $user_match->idnumber, $firstname, $lastname);
-                    // Unset invalid user as if one of these tables doesn't exist, might just mean it doesn't exist
-                    unset($invalid_users[$key]);
-                    $no_users_updated++;
+            if ($user_matches = $DB->get_records('user', array('firstname' => $firstname, 'lastname' => $lastname))) {
+
+                if (count($user_matches) === 1) {
+                    foreach ($user_matches as $match) {
+                        $new_usernames[] = $match->idnumber;
+                        $this->updateBksbData($old_username, $match->idnumber, $firstname, $lastname);
+                        // Unset invalid user as if one of these tables doesn't exist, might just mean it doesn't exist
+                        unset($invalid_users[$key]);
+                        $no_users_updated++;
+                    }
                 }
 
             } else {
@@ -720,7 +721,7 @@ class BksbReporting {
                     $query = sprintf("SELECT idnumber, firstname, lastname FROM %suser WHERE dob = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $CFG->prefix, $dob, $postcode);
                 } else if ($dob != '' && $postcode == '') {
                     // Search on dob and firstname
-                    $query = sprintf("SELECT idnumber, firstname, lastname FROM %suser WHERE dob = '%s' AND LOWER(firstname) = '%s'", $dob, $CFG->prefix, strtolower($user['firstname']));
+                    $query = sprintf("SELECT idnumber, firstname, lastname FROM %suser WHERE dob = '%s' AND LOWER(firstname) = '%s'", $CFG->prefix, $dob, strtolower($user['firstname']));
                 } else if ($postcode == '' && $dob != '') {
                     // Search on postcode and firstname
                     $query = sprintf("SELECT idnumber, firstname, lastname FROM %suser WHERE LOWER(firstname) = '%s' AND REPLACE(postcode, ' ', '') = '%s'", $CFG->prefix, $user['firstname'], $postcode);
