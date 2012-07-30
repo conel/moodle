@@ -7,8 +7,8 @@
 // Allow deleting cache files from the settings page
 $clear_cache = optional_param('clearcache', 0, PARAM_INT);
 if ($clear_cache === 1) {
-    include('Cache.class.php');
-    Cache::clearCache();
+    //include('Cache.class.php');
+    //Cache::clearCache();
 }
 
 // Settings stored in the 'mdl_config_plugins' table.
@@ -16,7 +16,8 @@ if ($clear_cache === 1) {
 /* BKSB Database Settings */
 $bksb_settings = new admin_setting_heading(
     'block_bksb/bksb_settings', 
-    get_string('bksb_settings', 'block_bksb')
+    get_string('bksb_settings', 'block_bksb'),
+    ''
 );
 $settings->add($bksb_settings);
 
@@ -58,14 +59,16 @@ $settings->add($db_password);
 
 $bksb_stats = new admin_setting_heading(
     'block_bksb/bksb_stats', 
-    get_string('bksb_stats', 'block_bksb')
+    get_string('bksb_stats', 'block_bksb'),
+    ''
 );
 
 
 /* MIS Database Settings */
 $mis_settings = new admin_setting_heading(
     'block_bksb/mis_settings', 
-    get_string('mis_settings', 'block_bksb')
+    get_string('mis_settings', 'block_bksb'),
+    ''
 );
 $settings->add($mis_settings);
 
@@ -108,7 +111,8 @@ $settings->add($mis_db_password);
 /* Cache */
 $bksb_cache = new admin_setting_heading(
     'block_bksb/bksb_cache', 
-    get_string('bksb_cache', 'block_bksb')
+    get_string('bksb_cache', 'block_bksb'),
+    ''
 );
 $settings->add($bksb_cache);
 
@@ -133,7 +137,8 @@ $settings->add(new admin_setting_heading(
 /* Links to Statistic Pages */
 $bksb_stats = new admin_setting_heading(
     'block_bksb/bksb_stats', 
-    get_string('bksb_stats', 'block_bksb')
+    get_string('bksb_stats', 'block_bksb'),
+    ''
 );
 $settings->add($bksb_stats);
 
@@ -156,7 +161,8 @@ $settings->add(new admin_setting_heading(
 /* Links to Unmatched Users */
 $bksb_unmatched = new admin_setting_heading(
     'block_bksb/bksb_unmatched', 
-    get_string('bksb_unmatched', 'block_bksb')
+    get_string('bksb_unmatched', 'block_bksb'),
+    ''
 );
 $settings->add($bksb_unmatched);
 

@@ -2,10 +2,8 @@
 /******************************************************************
 *
 *  BKBSReporting
-*  ====================
 *
-*  @usage           Used to retrieve BKSB Initial and Diagnostic 
-*                   Assessment results
+*  @usage           Used to retrieve BKSB Initial and Diagnostic Assessment results
 *
 *  @author			Nathan Kowald
 *  @since			26-08-2010

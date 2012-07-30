@@ -1,5 +1,6 @@
 <?php
 
+include('../../../config.php');
 include('../BKSBReporting.class.php');
 $max_rows = 800;
 
@@ -69,6 +70,8 @@ if (isset($_POST['submit'])) {
             if ($bksb_username = $bksb->findBksbUserName($value['idnumber'], $value['forename'], $value['surname'], $value['dob'], $value['postcode'])) {
                 // match found: lets get IA results   
                 // Get all categories to check
+                var_dump($bksb_username);
+                exit;
                 foreach ($bksb->ass_cats as $cat) {
                     if (is_array($bksb_username)) {
                         foreach ($bksb_username as $username) {
