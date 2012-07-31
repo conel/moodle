@@ -8,7 +8,7 @@ include($CFG->libdir.'/tablelib.php');
 include($CFG->dirroot . '/group/lib.php'); // Required to get group members
 
 $user_id = optional_param('id', 0, PARAM_INT);
-$course_id = optional_param('course_id', 1, PARAM_INT);
+$course_id = optional_param('course_id', SITEID, PARAM_INT);
 $group = optional_param('group', 0, PARAM_INT);
 $updatepref = optional_param('updatepref', -1, PARAM_INT);
 
@@ -22,6 +22,8 @@ require_login($course);
 
 $access_is_teacher = has_capability('block/bksb:view_all_results', $coursecontext);
 $access_is_student = has_capability('block/bksb:view_own_results', $coursecontext);
+$access_is_god = false;
+if (has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))) $access_is_god = true;
 
 if ($course_id != SITEID) {
     $PAGE->set_context($coursecontext);
@@ -50,7 +52,7 @@ echo '<img src="'.$OUTPUT->pix_url('logo-bksb', 'block_bksb').'" alt="BKSB logo"
 // Single User Results
 if ($user_id != 0) {
 
-    if ($access_is_student === false) { 
+    if ($user_id != $USER->id && ($access_is_god === false || $access_is_teacher === false)) { 
         error("You don't have permission to view this user's results");
     }
 
@@ -114,7 +116,7 @@ if ($user_id != 0) {
 } else if ($course->id && $course->id != $SITE->id) {
 
     // If student gets to this link, redirect them to their own results
-    if ($access_is_teacher === false) {
+    if ($access_is_teacher === false && $access_is_god === false) {
         $own_results = 'initial_assessment.php?id='.$USER->id.'&amp;course_id='.$course->id;
         error("You don't have permission to view all diagnostic assessment results for this course", $own_results);
     }
