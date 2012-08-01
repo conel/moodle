@@ -36,18 +36,23 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../config.php');
-require_once($CFG->dirroot . '/my/lib.php');
+include(dirname(__FILE__) . '/../config.php');
+if (strpos($USER->email, '@student.conel.ac.uk') === false) {
+} else {
+    header('location: student.php');
+    exit;
+}
+include_once($CFG->dirroot . '/my/lib.php');
 
 redirect_if_major_upgrade_required();
 
 // TODO Add sesskey check to edit
-$edit   = optional_param('edit', null, PARAM_BOOL);    // Turn editing on and off
+$edit = optional_param('edit', null, PARAM_BOOL);    // Turn editing on and off
 
 require_login();
 
 /* Banners */
-include($_SERVER['DOCUMENT_ROOT'] . '\theme\conel\banners\Banners.class.php');
+include($CFG->dirroot . '/theme/conel/banners/Banners.class.php');
 $audience = 1; // staff
 $banners = new Banners($audience); 
 $banners_exist = $banners->bannersExist();
