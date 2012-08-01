@@ -7,8 +7,8 @@
 // Allow deleting cache files from the settings page
 $clear_cache = optional_param('clearcache', 0, PARAM_INT);
 if ($clear_cache === 1) {
-    //include('Cache.class.php');
-    //Cache::clearCache();
+    include('Cache.class.php');
+    Cache::clearCache();
 }
 
 // Settings stored in the 'mdl_config_plugins' table.
