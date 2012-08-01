@@ -118,7 +118,7 @@ if ($user_id != 0) {
     // If student gets to this link, redirect them to their own results
     if ($access_is_teacher === false && $access_is_god === false) {
         $own_results = 'initial_assessment.php?id='.$USER->id.'&amp;course_id='.$course->id;
-        error("You don't have permission to view all diagnostic assessment results for this course", $own_results);
+        error("You don't have permission to view all initial assessment results for this course", $own_results);
     }
 
     $context = get_context_instance(CONTEXT_COURSE, $course->id);
