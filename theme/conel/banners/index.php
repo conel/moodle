@@ -31,14 +31,15 @@ $other_link = $banners->getOtherLink();
 <?php
     $all_banners = $banners->getBanners();
     $audience_path = $banners->getAudiencePath($audience);
+    $num_banners = count($all_banners);
 
-    if (count($all_banners) == 0) {
+    if ($num_banners == 0) {
         echo '<p>No '.$audience_path.' banners have been added yet.</p>';
     }
 ?>
 <div id="banners_holder">
 <?php
-	if (count($all_banners) > 0) {
+	if ($num_banners > 0) {
 		$c = 1;
 
 		foreach ($all_banners as $banner) {
@@ -57,7 +58,7 @@ $other_link = $banners->getOtherLink();
 			echo '</div>
 				<div class="count">'.$c.'</div>
 				<div class="movedown">';
-			if ($c != $active_banners && $active == 1) {
+			if ($c != $num_banners && $active == 1) {
 				echo '<a href="banner_actions.php?action=movedown&amp;pos='.$c.'&amp;audience='.$audience.'" title="Move Down"><img src="img/icon-movedown.png" /></a>';
 			}
 			echo '</div>
