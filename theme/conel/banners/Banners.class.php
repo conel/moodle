@@ -81,7 +81,7 @@ class Banners {
     private function getServerPath() {
         $audience_name = $this->getAudiencePath($this->audience);
         $path = pathinfo(getcwd());
-        return $path['dirname'] . '\\' . $path['basename'] . '\\' . $audience_name . '\\' ;
+        return $path['dirname'] . '/' . $path['basename'] . '/' . $audience_name . '/' ;
     }
 
     // TODO - If table not found: create it.
