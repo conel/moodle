@@ -47,9 +47,6 @@ define('FIRSTUSEDEXCELROW', 3);
 define('MOD_CLASS_ACTIVITY', 0);
 define('MOD_CLASS_RESOURCE', 1);
 
-define('COURSE_DISPLAY_SINGLEPAGE', 0); // display all sections on one page
-define('COURSE_DISPLAY_MULTIPAGE', 1); // split pages into a page per section
-
 function make_log_url($module, $url) {
     switch ($module) {
         case 'course':
@@ -1869,7 +1866,7 @@ function print_section_add_menus($course, $section, $modnames, $vertical=false, 
         $modchooser.= html_writer::end_tag('div');
 
         // Wrap the normal output in a noscript div
-        $usemodchooser = get_user_preferences('usemodchooser', 1);
+        $usemodchooser = get_user_preferences('usemodchooser', $CFG->modchooserdefault);
         if ($usemodchooser) {
             $output = html_writer::tag('div', $output, array('class' => 'hiddenifjs addresourcedropdown'));
             $modchooser = html_writer::tag('div', $modchooser, array('class' => 'visibleifjs addresourcemodchooser'));
@@ -2253,22 +2250,6 @@ function make_categories_options() {
         }
     }
     return $cats;
-}
-
-/**
- * Gets the name of a course to be displayed when showing a list of courses.
- * By default this is just $course->fullname but user can configure it. The
- * result of this function should be passed through print_string.
- * @param object $course Moodle course object
- * @return string Display name of course (either fullname or short + fullname)
- */
-function get_course_display_name_for_list($course) {
-    global $CFG;
-    if (!empty($CFG->courselistshortnames)) {
-        return $course->shortname . ' ' .$course->fullname;
-    } else {
-        return $course->fullname;
-    }
 }
 
 /**
@@ -4039,7 +4020,7 @@ function average_number_of_participants() {
         WHERE ue.enrolid = e.id
             AND e.courseid <> :siteid
             AND c.id = e.courseid
-            AND c.visible = 1)';
+            AND c.visible = 1) total';
     $params = array('siteid' => $SITE->id);
     $enrolmenttotal = $DB->count_records_sql($sql, $params);
 
@@ -4072,7 +4053,7 @@ function average_number_of_courses_modules() {
         WHERE c.id = cm.course
             AND c.id <> :siteid
             AND cm.visible = 1
-            AND c.visible = 1)';
+            AND c.visible = 1) total';
     $params = array('siteid' => $SITE->id);
     $moduletotal = $DB->count_records_sql($sql, $params);
 
