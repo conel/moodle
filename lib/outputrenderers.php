@@ -374,6 +374,9 @@ class core_renderer extends renderer_base {
         // flow player embedding support
         $this->page->requires->js_function_call('M.util.load_flowplayer');
 
+        // Set up help link popups for all links with the helplinkpopup class
+        $this->page->requires->js_init_call('M.util.help_popups.setup');
+
         $this->page->requires->js_function_call('setTimeout', array('fix_column_widths()', 20));
 
         $focus = $this->page->focuscontrol;
@@ -1497,9 +1500,10 @@ class core_renderer extends renderer_base {
      *
      * @param string $path The page link after doc root and language, no leading slash.
      * @param string $text The text to be displayed for the link
+     * @param boolean $forcepopup Whether to force a popup regardless of the value of $CFG->doctonewwindow
      * @return string
      */
-    public function doc_link($path, $text = '') {
+    public function doc_link($path, $text = '', $forcepopup = false) {
         global $CFG;
 
         $icon = $this->pix_icon('docs', $text, 'moodle', array('class'=>'iconhelp'));
@@ -1507,8 +1511,8 @@ class core_renderer extends renderer_base {
         $url = new moodle_url(get_docs_url($path));
 
         $attributes = array('href'=>$url);
-        if (!empty($CFG->doctonewwindow)) {
-            $attributes['id'] = $this->add_action_handler(new popup_action('click', $url));
+        if (!empty($CFG->doctonewwindow) || $forcepopup) {
+            $attributes['class'] = 'helplinkpopup';
         }
 
         return html_writer::tag('a', $icon.$text, $attributes);
@@ -1640,7 +1644,13 @@ class core_renderer extends renderer_base {
             $ratinghtml .= html_writer::empty_tag('input', $attributes);
 
             if (!$rating->settings->scale->isnumeric) {
-                $ratinghtml .= $this->help_icon_scale($rating->settings->scale->courseid, $rating->settings->scale);
+                // If a global scale, try to find current course ID from the context
+                if (empty($rating->settings->scale->courseid) and $coursecontext = $rating->context->get_course_context(false)) {
+                    $courseid = $coursecontext->instanceid;
+                } else {
+                    $courseid = $rating->settings->scale->courseid;
+                }
+                $ratinghtml .= $this->help_icon_scale($courseid, $rating->settings->scale);
             }
             $ratinghtml .= html_writer::end_tag('span');
             $ratinghtml .= html_writer::end_tag('div');
@@ -1729,12 +1739,13 @@ class core_renderer extends renderer_base {
         // note: this title is displayed only if JS is disabled, otherwise the link will have the new ajax tooltip
         $title = get_string('helpprefix2', '', trim($helpicon->title, ". \t"));
 
-        $attributes = array('href'=>$url, 'title'=>$title);
+        $attributes = array('href'=>$url, 'title'=>$title, 'aria-haspopup' => 'true');
         $id = html_writer::random_id('helpicon');
         $attributes['id'] = $id;
         $output = html_writer::tag('a', $output, $attributes);
 
         $this->page->requires->js_init_call('M.util.help_icon.add', array(array('id'=>$id, 'url'=>$url->out(false))));
+        $this->page->requires->string_for_js('close', 'form');
 
         // and finally span
         return html_writer::tag('span', $output, array('class' => 'helplink'));
@@ -1794,12 +1805,11 @@ class core_renderer extends renderer_base {
         // note: this title is displayed only if JS is disabled, otherwise the link will have the new ajax tooltip
         $title = get_string('helpprefix2', '', trim($title, ". \t"));
 
-        $attributes = array('href'=>$url, 'title'=>$title);
-        $id = html_writer::random_id('helpicon');
-        $attributes['id'] = $id;
+        $attributes = array('href'=>$url, 'title'=>$title, 'aria-haspopup' => 'true', 'class' => 'tooltip');
         $output = html_writer::tag('a', $output, $attributes);
 
-        $this->page->requires->js_init_call('M.util.help_icon.add', array(array('id'=>$id, 'url'=>$url->out(false))));
+        $this->page->requires->js_init_call('M.util.help_icon.setup');
+        $this->page->requires->string_for_js('close', 'form');
 
         // and finally span
         return html_writer::tag('span', $output, array('class' => 'helplink'));
@@ -2060,9 +2070,9 @@ EOD;
             $html .= <<<EOD
     <div id="file_info_{$client_id}" class="mdl-left filepicker-filelist" style="position: relative">
     <div class="filepicker-filename">
-        <div class="filepicker-container">$currentfile<span class="dndupload-message">$strdndenabled <br/><span class="dndupload-arrow"></span></span></div>
+        <div class="filepicker-container">$currentfile<div class="dndupload-message">$strdndenabled <br/><div class="dndupload-arrow"></div></div></div>
     </div>
-    <div><div class="dndupload-target">{$strdroptoupload}<br/><span class="dndupload-arrow"></span></div></div>
+    <div><div class="dndupload-target">{$strdroptoupload}<br/><div class="dndupload-arrow"></div></div></div>
     </div>
 EOD;
         }
