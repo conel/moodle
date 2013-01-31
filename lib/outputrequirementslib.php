@@ -564,10 +564,12 @@ class page_requirements_manager {
     public function css($stylesheet) {
         global $CFG;
 
-        if ($this->headdone) {
+        /* sid 11/01/2013 this check cause problems in plugins (e.g in turnitin assigment)
+		if ($this->headdone) {
             throw new coding_exception('Cannot require a CSS file after &lt;head> has been printed.', $stylesheet);
         }
-
+		*/
+		
         if ($stylesheet instanceof moodle_url) {
             // ok
         } else if (strpos($stylesheet, '/') === 0) {
