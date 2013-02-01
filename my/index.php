@@ -35,7 +35,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../config.php');
+require(dirname(__FILE__) . '/../config.php');
+// Redirect to either staff or student my homes
+if (strpos($USER->email, '@student.conel.ac.uk') === false) {
+    header('location: staff.php');
+} else {
+    header('location: student.php');
+}
+exit;
 require_once($CFG->dirroot . '/my/lib.php');
 
 redirect_if_major_upgrade_required();
@@ -48,20 +55,15 @@ require_login();
 $strmymoodle = get_string('myhome');
 
 if (isguestuser()) {  // Force them to see system default, no editing allowed
-    // If guests are not allowed my moodle, send them to front page.
-    if (empty($CFG->allowguestmymoodle)) {
-        redirect(new moodle_url('/', array('redirect' => 0)));
-    }
-
     $userid = NULL; 
     $USER->editing = $edit = 0;  // Just in case
-    $context = context_system::instance();
+    $context = get_context_instance(CONTEXT_SYSTEM);
     $PAGE->set_blocks_editing_capability('moodle/my:configsyspages');  // unlikely :)
     $header = "$SITE->shortname: $strmymoodle (GUEST)";
 
 } else {        // We are trying to view or edit our own My Moodle page
     $userid = $USER->id;  // Owner of the page
-    $context = context_user::instance($USER->id);
+    $context = get_context_instance(CONTEXT_USER, $USER->id);
     $PAGE->set_blocks_editing_capability('moodle/my:manageblocks');
     $header = "$SITE->shortname: $strmymoodle";
 }
@@ -72,7 +74,7 @@ if (!$currentpage = my_get_page($userid, MY_PAGE_PRIVATE)) {
 }
 
 if (!$currentpage->userid) {
-    $context = context_system::instance();  // So we even see non-sticky blocks
+    $context = get_context_instance(CONTEXT_SYSTEM);  // So we even see non-sticky blocks
 }
 
 // Start setting up the page
@@ -107,7 +109,7 @@ if ($PAGE->user_allowed_editing()) {
             if (!$currentpage = my_copy_page($USER->id, MY_PAGE_PRIVATE)) {
                 print_error('mymoodlesetup');
             }
-            $context = context_user::instance($USER->id);
+            $context = get_context_instance(CONTEXT_USER, $USER->id);
             $PAGE->set_context($context);
             $PAGE->set_subpage($currentpage->id);
         }
