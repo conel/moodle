@@ -663,7 +663,7 @@ class auth_plugin_ldap extends auth_plugin_base {
 
             do {
                 if ($ldap_pagedresults) {
-                    ldap_control_paged_result($ldapconnection, $this->config->pagesize, true, $ldap_cookie);
+                    ldap_control_paged_result($ldapconnection, 250, true, $ldap_cookie);
                 }
                 if ($this->config->search_sub) {
                     // Use ldap_search to find first user from subtree.
