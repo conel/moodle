@@ -215,3 +215,65 @@ table#staff_links a img {
 .settingsform .generalbox a:hover {
   text-decoration: hover;
 }
+
+
+/* Styles added by RPM */
+
+table.attendance {
+    width:100%;
+    margin-bottom:0;
+	font-size:0.85em;
+	border:none !important;
+}
+table.attendance th.ws {
+	text-align:center;
+	padding:0;
+	font-size:1.2em;
+	border:1px solid #ccc;
+	background-color:#FCFCFC;
+}
+table.attendance tr.colheaders th {
+    text-align:center;
+    background-color:#F8F9FA;
+	font-size:1.1em;
+	border:1px solid #ccc;
+    padding:3px;
+}
+table.attendance, table.attendance td {
+    border:1px solid #ccc;
+    padding:3px;
+}
+table.attendance td.green {
+	color:#00984B;
+}
+table.attendance td.amber {
+	color:#FF7E00;
+}
+table.attendance td.red {
+	color:#FF0000;
+}
+table.attendance td.absent {
+	background-color:#F59595;
+}
+table#att_key {
+}
+table#att_key th {
+	background-color:#F3F3F3;
+	text-align:center;
+}
+table#att_key td, table#att_key th {
+	border:1px solid #ccc !important;
+	white-space:nowrap;
+	text-align:center;
+}
+table#att_key td {
+	padding:0 3px;
+}
+table#att_key td.key {
+	font-weight:bold;
+}
+
+td.attendance { width: 10px; }
+td.attendance-green {width: 10px; background:#00984b; }
+td.attendance-amber {width: 10px; background:#ff7e00; }
+td.attendance-red {width: 10px; background:#ff0000; }

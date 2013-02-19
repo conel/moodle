@@ -140,7 +140,7 @@ abstract class grade_report {
      * @param string $context
      * @param int $page The current page being viewed (when report is paged)
      */
-    public function __construct($courseid, $gpr, $context, $page=null) {
+    public function grade_report($courseid, $gpr, $context, $page=null) {
         global $CFG, $COURSE, $DB;
 
         if (empty($CFG->gradebookroles)) {
