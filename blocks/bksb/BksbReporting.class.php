@@ -320,13 +320,16 @@ class BksbReporting {
      public function getDiagnosticResults($user_id='', $assessment_no='', Array $results) {
 
         if (!is_numeric($assessment_no) || !is_numeric($user_id)) {
-            return false;
+			return false;
         }
         $assessment = $this->ass_types[$assessment_no];
         $no_questions = $this->getNoQuestions($assessment_no);
 
         // Get results for this assessment
-        if (!isset($results[$assessment])) return false;
+        if (!isset($results[$assessment])) {
+		    //echo "failed no results";
+			return false;
+		}
 
         // Sometimes user might not have completed all questions, add dashes if this is the case
         if (count($results[$assessment]) < $no_questions) {

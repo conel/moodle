@@ -68,9 +68,9 @@ if ($user_id != 0) {
     $header .= '<br /><br /></div>';
 
     // Return from cache if set
-    Cache::init('user-'.$user_id.'-ia-html.cache', $bksb->cache_life);
-    if (Cache::cacheFileExists()) {
-        $table_html = Cache::getCache();
+    Cache1::init('user-'.$user_id.'-ia-html.cache', $bksb->cache_life);
+    if (Cache1::cacheFileExists()) {
+        $table_html = Cache1::getCache();
     } else {
 
         // Get BKSB Result categories
@@ -107,7 +107,7 @@ if ($user_id != 0) {
         $table->print_html();  // Print the table
         $table_html = ob_get_contents();
         ob_end_clean();
-        Cache::setCache($table_html);
+        Cache1::setCache($table_html);
 
     }
 
@@ -189,12 +189,12 @@ if ($user_id != 0) {
 
     if ($no_students > 0) {
         foreach ($students as $student) {
-            Cache::init('user-'.$student->idnumber.'-ia-results.cache', $bksb->cache_life);
-            if (Cache::cacheFileExists()) {
-                $bksb_results = Cache::getCache();
+            Cache1::init('user-'.$student->idnumber.'-ia-results.cache', $bksb->cache_life);
+            if (Cache1::cacheFileExists()) {
+                $bksb_results = Cache1::getCache();
             } else {
                 $bksb_results = $bksb->getResults($student->idnumber);
-                Cache::setCache($bksb_results);
+                Cache1::setCache($bksb_results);
             }
             if ($bksb_results === false) continue;
 

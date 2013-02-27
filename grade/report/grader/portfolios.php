@@ -162,7 +162,7 @@ $report->load_final_grades();
 
 print_grade_page_head($courseid, 'report', 'grader', $reportname, false, $buttons);
 	
-echo "<p><a href='/blocks/assmgr/actions/list_portfolio_assessments.php?category_id=".$course->category."'>&lt;&lt; to Course Overview</a></p>";
+echo "<p><a href='/blocks/assmgr/actions/list_portfolio_assessments.php?category_id=".$course->category."'>&lt;&lt; to Qualification Overview</a></p>";
 
 echo $report->group_selector;
 echo '<div class="clearer"></div>';

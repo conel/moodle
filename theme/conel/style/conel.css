@@ -277,3 +277,112 @@ td.attendance { width: 10px; }
 td.attendance-green {width: 10px; background:#00984b; }
 td.attendance-amber {width: 10px; background:#ff7e00; }
 td.attendance-red {width: 10px; background:#ff0000; }
+
+
+h2.summary {
+	display:inline;
+	}
+	
+div.singleselect {
+	margin-left:10px;
+	}
+	
+.singleselect, .singleselect *
+	{
+	display:inline !important;
+	}
+	
+	img.statimg
+	{
+	vertical-align:middle;
+	display:inline;
+	margin-left:10px;
+	}
+	
+	
+	
+/* RPM CSS for studentinfo page */	
+
+table#ict_container td {
+	border:1px solid #CCC;
+}
+table.ict_totals td {
+	text-align:left !important;
+	border:none !important;
+}
+td.bksb_username span {
+	width:400px !important;
+	overflow:hidden;
+}
+td.bksb_firstname, td.bksb_lastname {
+	/*
+	text-transform:lowercase;
+	text-transform:capitalize;
+	*/
+}
+#invalid_users table td {
+	border:1px solid #CCC;
+}
+#student_profile {
+	margin-left:20px;
+}
+#student_profile h2 {
+	font-size:1.8em;
+	text-transform:lowercase;
+	text-transform:capitalize;
+	margin-bottom:4px;
+	text-shadow:rgba(0, 0, 0, 0.1) 1px 1px 1px !important;
+}
+#student_profile td.label {
+	font-weight:bold;
+	width:150px;
+}
+div.student_personal_details {
+	padding:0;
+	width:810px;
+	overflow:hidden;
+}
+div.student_personal_details table {
+
+}
+div.student_personal_details h4, #bksb_ia_results h4, #bksb_diag_results h4 {
+	font-size:1.4em;
+	text-transform:lowercase;
+	text-transform:capitalize;
+	background-color:#D2D2D2;
+	padding-left:8px;
+	padding-top:2px;
+}
+div.spd_personal {
+	display:block;
+	float:left;
+	width:400px;
+	margin-right:10px;
+}
+div.spd_address {
+	display:block;
+	float:left;
+	width:270px;
+}
+div.spd_personal table, div.spd_address table, div.spd_entry_qual table, #bksb_ia_results table {
+	/*background-color:#EBE9ED;*/
+	background-color:#F5F5F5;
+	border:2px solid #D2D2D2;
+	width:100%;
+	padding:10px;
+}
+div.spd_personal table td, div.spd_address table td, div.spd_entry_qual td, div.spd_personal table th, div.spd_address table th, div.spd_entry_qual th {
+	padding-top:5px;
+	padding-bottom:5px;
+	padding-left:8px;
+	padding-right:5px;
+}
+div.spd_entry_qual {
+	margin-top:-15px;
+	width:680px;
+	margin-left:121px;
+}
+td.side div.reflect {
+	margin-top:-16px;
+	padding:6px;
+}

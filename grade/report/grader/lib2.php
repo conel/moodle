@@ -1810,7 +1810,7 @@ class grade_report_grader2 extends grade_report_grader {
 			require_once($CFG->dirroot.'/blocks/assmgr/classes/tables/assmgr_ajax_table.class.php');			
 			require_once($CFG->dirroot.'/blocks/assmgr/db/assmgr_db.php');
 			require_once($CFG->dirroot.'/blocks/assmgr/classes/assmgr_progress_bar.class.php');
-		
+			
 			$candidatelist = array($userid);
 			
 			$courseobject = new Object();
@@ -1832,13 +1832,19 @@ class grade_report_grader2 extends grade_report_grader {
 			$access_isassessor = has_capability('block/assmgr:assessportfolio', $coursecontext);
 			
 			$candidate = array_pop($matrix);
-
+			
+			//print_object($candidate);
+			
             $needsassess = "needsassess{$this->courseid}";
             $needsassess = (bool) $candidate->$needsassess;
             
 			$achieved = 'course'.$this->courseid;			
 			
-			$progbar = $progress->get_unit_progress($userid, $this->courseid, $access_isassessor, 'small', $candidate->$achieved);
+			//print "achieved: ".$achieved."<br>";
+			//print "achieved: ".$candidate->achieved."<br>";
+			
+			//$progbar = $progress->get_unit_progress($userid, $this->courseid, $access_isassessor, 'small', $candidate->$achieved);
+			$progbar = $progress->get_unit_progress($userid, $this->courseid, $access_isassessor, 'small');
             
             $linkstr = ($needsassess) ? get_string('assess', 'block_assmgr') : get_string('view', 'block_assmgr') ;
             
