@@ -262,8 +262,8 @@ class grade_report_grader extends grade_report {
      * all this should be in the new table class that we might need to use
      * for displaying grades.
      */
-    function setup_sortitemid() {
-
+    function setup_sortitemid() {	
+		
         global $SESSION;
 
         if ($this->sortitemid) {
@@ -419,6 +419,10 @@ class grade_report_grader extends grade_report {
                 }
             }
         }
+        
+        //print "loadfinalgrades:<br>";
+        //print_object($this->grades);
+        //print "--------------------------------------------------------------------------------------";
     }
 
     /**
@@ -758,9 +762,9 @@ class grade_report_grader extends grade_report {
             }
 
             foreach ($this->gtree->items as $itemid=>$unused) {
-                $item =& $this->gtree->items[$itemid];
+                $item =& $this->gtree->items[$itemid];                                
                 $grade = $this->grades[$userid][$item->id];
-
+                
                 // Get the decimal points preference for this item
                 $decimalpoints = $item->get_decimals();
 
@@ -771,7 +775,7 @@ class grade_report_grader extends grade_report {
                 } else {
                     $gradeval = $grade->finalgrade;
                 }
-
+                
                 // MDL-11274
                 // Hide grades in the grader report if the current grader doesn't have 'moodle/grade:viewhidden'
                 if (!$this->canviewhidden and $grade->is_hidden()) {
@@ -1248,7 +1252,7 @@ class grade_report_grader extends grade_report {
         global $USER, $CFG;
 
         $rangehtml = '';
-        //if ($this->get_pref('showranges')) {
+        if ($this->get_pref('showranges')) {
             $rangesdisplaytype   = $this->get_pref('rangesdisplaytype');
             $rangesdecimalpoints = $this->get_pref('rangesdecimalpoints');
 
@@ -1279,7 +1283,7 @@ class grade_report_grader extends grade_report {
 
             }
             $rangehtml .= '</tr>';
-        //}
+        }
         return $rangehtml;
     }
 
@@ -1620,7 +1624,7 @@ class grade_report_grader2 extends grade_report_grader {
             //if ($key == 0) continue;
             if ($key < 2) continue;
 			
-			array_unshift($row, array_pop($row));
+			//array_unshift($row, array_pop($row));
 			            
 			$headerhtml .= '<tr class="heading r'.$this->rowcount++.'">';
 			
@@ -1682,8 +1686,8 @@ class grade_report_grader2 extends grade_report_grader {
                 }
 				
                 if ($type == 'filler' or $type == 'fillerfirst' or $type == 'fillerlast') {}
-                else if ($type == 'category') {}
-                /*else if ($type == 'categoryitem') {}*/
+                else if ($type == 'category') { continue; }
+                else if ($type == 'categoryitem') { continue; }
                 else {
                     $headerlink = $this->gtree->get_element_header($element, true, $this->get_pref('showactivityicons'), false);
                     $headerhtml .= '<th class=" '.$columnclass.' '.$type.$catlevel.'" scope="col" onclick="set_col(this.cellIndex)">'.shorten_text($headerlink);
@@ -1716,9 +1720,9 @@ class grade_report_grader2 extends grade_report_grader {
     function get_studentshtml() {
 		
         global $CFG, $DB, $USER;
+               
+		//array_unshift($this->gtree->items, array_pop($this->gtree->items));
 
-		array_unshift($this->gtree->items, array_pop($this->gtree->items));
-			
         $studentshtml = '';
         $strfeedback  = $this->get_lang_string("feedback");
         $strgrade     = $this->get_lang_string('grade');
@@ -1732,10 +1736,15 @@ class grade_report_grader2 extends grade_report_grader {
         $scales_list = '';
         $tabindices = array();
 
+		//print_object($this->gtree);
 		//print_object($this->gtree->items);
 		//print "------------------------------------------------<br>";
 		
         foreach ($this->gtree->items as $item) {
+            
+            //print "grade tree item:";
+            //print_object($item);
+            //print "-------------------------------------------------------------------";
             
             if (!empty($item->scaleid)) {
                 $scales_list .= "$item->scaleid,";
@@ -1765,6 +1774,9 @@ class grade_report_grader2 extends grade_report_grader {
 		
         foreach ($this->users as $userid => $user) {
 
+            //print "********************************************************";
+            //print "userid: $userid<br>";
+            
             if ($this->canviewhidden) {
                 $altered = array();
                 $unknown = array();
@@ -1871,25 +1883,36 @@ class grade_report_grader2 extends grade_report_grader {
 			//print_object($this->gtree->items);			
 			//continue;
 			
-			//$ind = 0;
+			$ind = 0;
 			
 			//print "grades:<br>";
 			//print_object($this->grades);
 			//print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++<br>";
 			
+			//print_object($this->gtree->items);
+							
             foreach ($this->gtree->items as $itemid => $unused) {
                 
-                $item =& $this->gtree->items[$itemid];   
+                $item =& $this->gtree->items[$itemid];                   
+                
                 $grade = $this->grades[$userid][$item->id];
                 
-                //print "itemid: $itemid <br>";
+                //$vicc = array(null,1);      
+                //$grade->finalgrade = $vicc[array_rand(array(0,1))];             
                 
-                //print $ind++ . ":<br>";
-                //print_object($grade->finalgrade);
+                /*
+                print "itemid: $itemid <br>";
                 
-                //print "item:<br>";
-                //print_object($item);
-
+                print "index: " . $ind++ . ":<br>";
+                print_object($grade->finalgrade);
+                
+                print "item:<br>";
+                print_object($item);
+				print "------------------------------------------------<br>";
+				*/
+				
+				//if($ind>0)break;
+				
                 // Get the decimal points preference for this item
                 $decimalpoints = $item->get_decimals();
 
@@ -1921,6 +1944,7 @@ class grade_report_grader2 extends grade_report_grader {
                 $cellclasses = 'grade cell c'.$columncount++;
                 
                 if ($item->is_category_item()) {
+					continue;
                     $cellclasses .= ' cat';
                 }
                 if ($item->is_course_item()) {
@@ -2097,7 +2121,49 @@ class grade_report_grader2 extends grade_report_grader {
              check_browser_version('Safari', '2.0')); 
 		*/
     }
-        
+
+    function get_rangehtml() {
+        global $USER, $CFG;
+
+        $rangehtml = '';
+        if ($this->get_pref('showranges')) {
+            $rangesdisplaytype   = $this->get_pref('rangesdisplaytype');
+            $rangesdecimalpoints = $this->get_pref('rangesdecimalpoints');
+
+            $columncount=0;
+            $rangehtml = '<tr class="range r'.$this->rowcount++.' heading">';
+
+            $fixedstudents = $this->is_fixed_students();
+            if (!$fixedstudents) {
+                $colspan='';
+                if ($this->get_pref('showuseridnumber')) {
+                    $colspan = 'colspan="2" ';
+                }
+                $rangehtml .= '<th class="header c0 range" '.$colspan.' scope="row">'.$this->get_lang_string('range','grades').'</th>';
+            }
+			
+			//one more for the progress bar
+			$rangehtml .= '<th class="header c'.$columncount++.' range">&nbsp;</th>';
+			
+            foreach ($this->gtree->items as $itemid=>$unused) {
+                $item =& $this->gtree->items[$itemid];
+				
+				if($item->itemtype=='category') continue;
+
+                $hidden = '';
+                if ($item->is_hidden()) {
+                    $hidden = ' hidden ';
+                }
+
+                $formatted_range = $item->get_formatted_range($rangesdisplaytype, $rangesdecimalpoints);
+
+                $rangehtml .= '<th class="header c'.$columncount++.' range"><span class="rangevalues'.$hidden.'">'. $formatted_range .'</span></th>';
+
+            }
+            $rangehtml .= '</tr>';
+        }
+        return $rangehtml;
+    }        
 }
 
 class grade_category2 extends grade_category {
@@ -2139,6 +2205,8 @@ class grade_category2 extends grade_category {
         // sort the array
         ksort($children_array);
 
+		//print_object($children_array);
+		
         return $children_array;
     }
    
@@ -2309,7 +2377,7 @@ class grade_category2 extends grade_category {
         if (array_key_exists('finalgrades', $category_array)) {
             $result['finalgrades'] = $category_array['finalgrades'];
         }
-
+		
         // recursively resort children
         if (!empty($category_array['children'])) {
             $result['children'] = array();

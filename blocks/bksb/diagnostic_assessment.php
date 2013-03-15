@@ -70,9 +70,9 @@ if ($user_id != 0) {
     $header .= '</div>';
 
     // Return from cache if set
-    Cache::init('user-'.$user_id.'-da-html.cache', $bksb->cache_life);
-    if (Cache::cacheFileExists()) {
-        $table_html = Cache::getCache();
+    Cache1::init('user-'.$user_id.'-da-html.cache', $bksb->cache_life);
+    if (Cache1::cacheFileExists()) {
+        $table_html = Cache1::getCache();
     } else {
         $best_scores = $bksb->getBestScores($conel_id);
         $user_sessions = $bksb->getBksbDiagSessions($conel_id);
@@ -153,7 +153,7 @@ if ($user_id != 0) {
 
         $table_html = ob_get_contents();
         ob_end_clean();
-        Cache::setCache($table_html);
+        Cache1::setCache($table_html);
     }
 
     echo $table_html;
@@ -217,9 +217,9 @@ if ($user_id != 0) {
     $cols = array('picture', 'fullname');
     $cols_header = array('Picture', 'Name');
 
-    Cache::init('da-questions-'.$ass_no.'.cache', 2419200); // one month
-    if (Cache::cacheFileExists()) {
-        $overviews = Cache::getCache();
+    Cache1::init('da-questions-'.$ass_no.'.cache', 2419200); // one month
+    if (Cache1::cacheFileExists()) {
+        $overviews = Cache1::getCache();
         $no_questions = count($overviews);
     } else {
         $no_questions = $bksb->getNoQuestions($ass_no);
@@ -255,25 +255,25 @@ if ($user_id != 0) {
 
     // Get students by group (if set)
     if ($group != 0) {
-        Cache::init('course-'.$course->id.'-users-da-'.$ass_no.'-group-'.$group.'.cache', $bksb->cache_life);
-        if (Cache::cacheFileExists()) {
-            $course_students = Cache::getCache();
+        Cache1::init('course-'.$course->id.'-users-da-'.$ass_no.'-group-'.$group.'.cache', $bksb->cache_life);
+        if (Cache1::cacheFileExists()) {
+            $course_students = Cache1::getCache();
         } else {
             $members = groups_get_members_by_role($group, $course->id, 'u.id, u.firstname, u.lastname, u.idnumber');
             $course_students = $members[5]->users; // students are role '5'
             $diag_ids = $bksb->getDiagnosticIdsForStudents($course_students);
             $course_students = $bksb->filterStudentsByDiagAss($course_students, $diag_ids, $ass_no);
-            Cache::setCache($course_students);
+            Cache1::setCache($course_students);
         }
     } else {
-        Cache::init('course-'.$course->id.'-users-da-'.$ass_no.'.cache', $bksb->cache_life);
-        if (Cache::cacheFileExists()) {
-            $course_students = Cache::getCache();
+        Cache1::init('course-'.$course->id.'-users-da-'.$ass_no.'.cache', $bksb->cache_life);
+        if (Cache1::cacheFileExists()) {
+            $course_students = Cache1::getCache();
         } else {
             $course_students = $bksb->getStudentsForCourse($course->id);
             $diag_ids = $bksb->getDiagnosticIdsForStudents($course_students);
             $course_students = $bksb->filterStudentsByDiagAss($course_students, $diag_ids, $ass_no);
-            Cache::setCache($course_students);
+            Cache1::setCache($course_students);
         }
     }
 
@@ -288,9 +288,9 @@ if ($user_id != 0) {
     if ($no_students > 0) {
         foreach ($students as $student) {
 
-            Cache::init('user-'.$student->idnumber.'-da-results-'.$ass_no.'.cache', $bksb->cache_life);
-            if (Cache::cacheFileExists()) {
-                $row = Cache::getCache();
+            Cache1::init('user-'.$student->idnumber.'-da-results-'.$ass_no.'.cache', $bksb->cache_life);
+            if (Cache1::cacheFileExists()) {
+                $row = Cache1::getCache();
                 $records_found = true;
             } else {
                 $user_sessions = $bksb->getBksbDiagSessions($student->idnumber);
@@ -314,7 +314,7 @@ if ($user_id != 0) {
                 
                 $diag_results[] = '<span style="white-space:nowrap";>'.$percentage.'%<br /><a href="'.$bksb_results_url.'" class="percentage_link" title="Go to BKSB results page" target="_blank">View on BKSB</a></span>';
                 $row = array_merge($col_row, $diag_results);
-                Cache::setCache($row);
+                Cache1::setCache($row);
             }
 
             $table->add_data($row);
@@ -323,12 +323,12 @@ if ($user_id != 0) {
     $table->print_html();  // Print the table
 
     if ($records_found == true) {
-        Cache::init('da-questions-'.$ass_no.'.cache', 2419200); // one month
-        if (Cache::cacheFileExists()) {
-            $overviews = Cache::getCache();
+        Cache1::init('da-questions-'.$ass_no.'.cache', 2419200); // one month
+        if (Cache1::cacheFileExists()) {
+            $overviews = Cache1::getCache();
         } else {
             $overviews = $bksb->getAssDetails($ass_no);
-            Cache::setCache($overviews);
+            Cache1::setCache($overviews);
         }
         $q_html = '<table class="bksb_key" width="95%">';
         $q_html .= '<tr><td>';

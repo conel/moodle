@@ -517,6 +517,22 @@ class BksbReporting {
         }
     }
     
+	
+	public function getBksbSessionNo_bypass($username) {
+		//RPM dig out the session number so it can be includede in a URL to bksb and allow for results to be viewed.
+		$query = sprintf("SELECT bs.session_id, ba.[assessment name] FROM bksb_Sessions AS bs LEFT OUTER JOIN bksb_Assessments AS ba ON bs.assessment_id = ba.ass_ref WHERE (bs.userName = '%d') AND (ba.[assessment report] = 'Reports/DiagReport.aspx') AND (ba.[assessment group] = 1) AND (bs.status = 'Complete') ORDER BY bs.dateCreated", $username);
+        if ($result = $this->connection->execute($query)) {
+			while (!$result->EOF) {
+                $sess = $result->fields['session_id']->value;
+                $result->MoveNext();
+            }
+            $result->Close();
+			return $sess;
+		}
+		
+    }
+	
+	
     public function getBksbPercentage($session_id) {
 
         // Get the percentage - the BKSB way
@@ -1504,6 +1520,7 @@ class BksbReporting {
         }
     }
     public function filterStudentsByDiagAss(Array $students, Array $diag_ids, $ass_no) {
+        /*
         $ass_type = $this->getAssTypeFromNo($ass_no);
         $filtered = array();
         foreach ($students as $student) {
@@ -1515,6 +1532,8 @@ class BksbReporting {
             }
         }
         return $filtered;
+        */
+        return $students;
     }
 
     public function getStudentsForCourse($course_id) {
@@ -1541,6 +1560,8 @@ class BksbReporting {
     }
 
     public function filterStudentsByPage(Array $students, $offset, $perpage) {
+        $students = array_slice($students,$offset,$perpage);
+        /*
         $valid_keys[] = $offset;
         while (count($valid_keys) < $perpage) {
             $valid_keys[] = $offset + 1;
@@ -1552,6 +1573,7 @@ class BksbReporting {
             }
             $c++;
         }
+        */
         // check for name filters
         $students = $this->filterStudentsByName($students);
         return $students;

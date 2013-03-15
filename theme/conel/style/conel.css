@@ -280,7 +280,6 @@ td.attendance-red {width: 10px; background:#ff0000; }
 
 
 h2.summary {
-	display:inline;
 	}
 	
 div.singleselect {
@@ -345,7 +344,7 @@ div.student_personal_details {
 div.student_personal_details table {
 
 }
-div.student_personal_details h4, #bksb_ia_results h4, #bksb_diag_results h4 {
+div.student_personal_details h4, #bksb_ia_results h4, #bksb_diag_results h4, #predicted_outcome h4 {
 	font-size:1.4em;
 	text-transform:lowercase;
 	text-transform:capitalize;
@@ -353,6 +352,17 @@ div.student_personal_details h4, #bksb_ia_results h4, #bksb_diag_results h4 {
 	padding-left:8px;
 	padding-top:2px;
 }
+
+div#stuinfotarget h4 {
+	font-size:1.4em;
+	text-transform:lowercase;
+	text-transform:capitalize;
+	background-color:#D2D2D2;
+	padding-left:8px;
+	padding-top:2px;
+	height:55px;
+}
+
 div.spd_personal {
 	display:block;
 	float:left;
@@ -386,3 +396,68 @@ td.side div.reflect {
 	margin-top:-16px;
 	padding:6px;
 }
+
+/** ILP progress bars for attendance **/
+
+.lpr_progress_bar {
+    width           : 120px;
+    height          : 15px;
+    border          : 1px solid #000000;
+    background-color: #FFFFFF;
+	text-align		: left !important;
+}
+
+.lpr_progress_bar .college_target {
+    background-color: #4D89F9;
+    border          : 0 none;
+    height          : 15px;
+}
+
+
+.lpr_progress_bar .progress_avg {
+    border          : 0 none;
+    height          : 15px;
+}
+
+.lpr_progress_bar .attendance_avg {
+    /*background-color: #80C65A;*/
+    border          : 0 none;
+    height          : 15px;
+}
+
+.lpr_progress_bar .punctuality_avg {
+    /*background-color: #80C65A;*/
+    border          : 0 none;
+    height          : 15px;
+}
+
+.simple_attendance_overview {
+width:290px;
+}
+
+.simple_attendance_overview .label {
+	font-weight:bold;
+	font-size:1.2em;
+	}
+	
+	
+.detailed_attendance {
+margin-top:20px;
+}
+
+.detailed_attendance  a{
+border:3px solid red;
+padding:7px;
+display:block;
+width:380px;
+font-weight:bold;
+text-align:center;
+font-size:1.3em;
+}
+
+.detailed_attendance  a:hover{
+background-color:red;
+color:white;
+border:3px solid tomato;
+}
+

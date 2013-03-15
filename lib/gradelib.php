@@ -311,15 +311,35 @@ function grade_update($source, $courseid, $itemtype, $itemmodule, $iteminstance,
  * @return bool returns true if grade items were found and updated successfully
  */
 function grade_update_outcomes($source, $courseid, $itemtype, $itemmodule, $iteminstance, $userid, $data) {
+    
     if ($items = grade_item::fetch_all(array('itemtype'=>$itemtype, 'itemmodule'=>$itemmodule, 'iteminstance'=>$iteminstance, 'courseid'=>$courseid))) {
+  
         $result = true;
+        
         foreach ($items as $item) {
+            
             if (!array_key_exists($item->itemnumber, $data)) {
                 continue;
             }
-            $grade = $data[$item->itemnumber] < 1 ? null : $data[$item->itemnumber];
+            
+            $grade = $data[$item->itemnumber] < 1 ? null : $data[$item->itemnumber];           
+            
             $result = ($item->update_final_grade($userid, $grade, $source) && $result);
-        }
+			
+			if((int)$grade==1){				
+								
+				global $DB;
+								
+				$itm = $DB->get_record_select('grade_items', "courseid = '$courseid' AND itemnumber = '".$item->outcomeid."'", null, 'id');							
+														
+				if($DB->record_exists('grade_grades', array('itemid' => $itm->id, 'userid' => $userid))) {			 
+					$DB->set_field('grade_grades', 'finalgrade', $grade, array('itemid' => $itm->id, 'userid' => $userid));
+				} else {
+					$DB->insert_record('grade_grades', (object) array('itemid' => $itm->id, 'userid' => $userid, 'finalgrade' => $grade));
+				}
+			}			            
+        }     
+               
         return $result;
     }
     return false; //grade items not found
