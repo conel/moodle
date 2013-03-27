@@ -1856,6 +1856,9 @@ class grade_report_grader2 extends grade_report_grader {
 			//print "achieved: ".$candidate->achieved."<br>";
 			
 			//$progbar = $progress->get_unit_progress($userid, $this->courseid, $access_isassessor, 'small', $candidate->$achieved);
+			
+			//print "userid: $userid, courseid: ".$this->courseid.", access_isassessor: ".$access_isassessor."<br>";
+			
 			$progbar = $progress->get_unit_progress($userid, $this->courseid, $access_isassessor, 'small');
             
             $linkstr = ($needsassess) ? get_string('assess', 'block_assmgr') : get_string('view', 'block_assmgr') ;

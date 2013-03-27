@@ -101,6 +101,8 @@ $PAGE->requires->js('/lib/jquery/jquery-1.7.2.min.js', true);
 $PAGE->requires->js('/lib/jquery/jquery.easing.1.3.min.js', true);
 $PAGE->requires->js('/lib/jquery/rotator/js/jquery.wt-rotator.min.js', true);
 $PAGE->requires->js('/theme/conel/banners/js/config.js', true);
+/* ILP */
+$PAGE->requires->css('/blocks/ilp/styles.css',true);
 
 if (get_home_page() != HOMEPAGE_MY) {
     if (optional_param('setdefaulthome', false, PARAM_BOOL)) {
@@ -166,6 +168,7 @@ if ($currentpage->userid == 0) {
 echo $OUTPUT->header();
 
 //echo $OUTPUT->blocks_for_region('content');
+
 ?>
 <h2>News</h2>
 <?php if ($banners_exist === true) { ?>
@@ -197,4 +200,17 @@ if (has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))) 
 <br />
 
 <?php
+
+//RPM build up the ILP content to be displayed on this page
+require_once($CFG->dirroot.'/blocks/ilp/classes/dashboard/plugins/ilp_dashboard_student_info_plugin.php');
+require_once($CFG->dirroot.'/blocks/ilp/classes/dashboard/plugins/ilp_dashboard_main_plugin.php');
+$ilpcontent = new ilp_dashboard_student_info_plugin($USER->id);
+echo '<div class="ilp_mystudent">';
+echo '<div class="ilp">';
+echo $ilpcontent->display_mystudent();
+echo '</div></div>';
+
+			
+			
+			
 echo $OUTPUT->footer();
