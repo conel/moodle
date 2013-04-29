@@ -119,7 +119,7 @@ class feedback_item_multichoice extends feedback_item_base {
 
     //gets an array with three values(typ, name, XXX)
     //XXX is an object with answertext, answercount and quotient
-    public function get_analysed($item, $groupid = false, $courseid = false) {
+    public function get_analysed($item, $groupid = false, $courseid = false, $where_clause = false) {
         $info = $this->get_info($item);
 
         $analysed_item = array();
@@ -134,7 +134,8 @@ class feedback_item_multichoice extends feedback_item_base {
         }
 
         //get the values
-        $values = feedback_get_group_values($item, $groupid, $courseid, $this->ignoreempty($item));
+        $values = feedback_get_group_values($item, $groupid, $courseid, $this->ignoreempty($item), $where_clause);
+        
         if (!$values) {
             return null;
         }
@@ -215,8 +216,9 @@ class feedback_item_multichoice extends feedback_item_base {
         return $printval;
     }
 
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
+    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false, $where_clause = false) {        
         global $OUTPUT;
+                
         $sep_dec = get_string('separator_decimal', 'feedback');
         if (substr($sep_dec, 0, 2) == '[[') {
             $sep_dec = FEEDBACK_DECIMAL;
@@ -227,7 +229,8 @@ class feedback_item_multichoice extends feedback_item_base {
             $sep_thous = FEEDBACK_THOUSAND;
         }
 
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
+        $analysed_item = $this->get_analysed($item, $groupid, $courseid, $where_clause);
+        
         if ($analysed_item) {
             $itemname = $analysed_item[1];
             echo '<tr><th colspan="2" align="left">';

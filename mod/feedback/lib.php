@@ -2373,7 +2373,8 @@ function feedback_update_values($completed, $tmp = false) {
 function feedback_get_group_values($item,
                                    $groupid = false,
                                    $courseid = false,
-                                   $ignore_empty = false) {
+                                   $ignore_empty = false,
+                                   $where_clause = false) {
 
     global $CFG, $DB;
 
@@ -2402,6 +2403,20 @@ function feedback_get_group_values($item,
             $ignore_empty_select = "";
         }
 
+		if ($where_clause !== false && $where_clause != '' ) {
+			$where_clause = str_replace('fbv.','',$where_clause);
+			$values = $DB->get_records_select('feedback_value', $where_clause);
+		} elseif ($courseid !== false && $courseid != 0) {
+            $select = "item = ? AND course_id = ? ".$ignore_empty_select;
+            $params = array($item->id, $courseid);
+            $values = $DB->get_records_select('feedback_value', $select, $params);
+		} else {
+            $select = "item = ? ".$ignore_empty_select;
+            $params = array($item->id);
+            $values = $DB->get_records_select('feedback_value', $select, $params);
+		}
+
+		/*		
         if ($courseid) {
             $select = "item = ? AND course_id = ? ".$ignore_empty_select;
             $params = array($item->id, $courseid);
@@ -2411,6 +2426,7 @@ function feedback_get_group_values($item,
             $params = array($item->id);
             $values = $DB->get_records_select('feedback_value', $select, $params);
         }
+		*/
     }
     $params = array('id'=>$item->feedback);
     if ($DB->get_field('feedback', 'anonymous', $params) == FEEDBACK_ANONYMOUS_YES) {

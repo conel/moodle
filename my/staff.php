@@ -32,7 +32,6 @@
  * @copyright  2010 Remote-Learner.net
  * @author     Hubert Chathi <hubert@remote-learner.net>
  * @author     Olav Jordan <olav.jordan@remote-learner.net>
- * @author     Nathan Kowald <nkowald@conel.ac.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -47,7 +46,7 @@ include_once($CFG->dirroot . '/my/lib.php');
 redirect_if_major_upgrade_required();
 
 // TODO Add sesskey check to edit
-$edit = optional_param('edit', null, PARAM_BOOL);    // Turn editing on and off
+$edit   = optional_param('edit', null, PARAM_BOOL);    // Turn editing on and off
 
 require_login();
 
@@ -74,7 +73,7 @@ if (isguestuser()) {  // Force them to see system default, no editing allowed
     $userid = $USER->id;  // Owner of the page
     $context = get_context_instance(CONTEXT_USER, $USER->id);
     $PAGE->set_blocks_editing_capability('moodle/my:manageblocks');
-    $header = "$SITE->shortname: My home (Staff)";
+    $header = "$SITE->shortname: $strmymoodle";
 }
 
 // Get the My Moodle page info.  Should always return something unless the database is broken.
@@ -91,11 +90,12 @@ $params = array();
 $PAGE->set_context($context);
 $PAGE->set_url('/my/staff.php', $params);
 $PAGE->set_pagelayout('mydashboard');
-$PAGE->set_pagetype('my-staff');
+$PAGE->set_pagetype('my-index');
 $PAGE->blocks->add_region('content');
 $PAGE->set_subpage($currentpage->id);
 $PAGE->set_title($header);
 $PAGE->set_heading($header);
+
 /* Banners */
 $PAGE->requires->css('/lib/jquery/rotator/wt-rotator.css', true);
 $PAGE->requires->js('/lib/jquery/jquery-1.7.2.min.js', true);
@@ -103,13 +103,15 @@ $PAGE->requires->js('/lib/jquery/jquery.easing.1.3.min.js', true);
 $PAGE->requires->js('/lib/jquery/rotator/js/jquery.wt-rotator.min.js', true);
 $PAGE->requires->js('/theme/conel/banners/js/config.js', true);
 
-if (get_home_page() != HOMEPAGE_MY) {
-    if (optional_param('setdefaulthome', false, PARAM_BOOL)) {
-        set_user_preference('user_home_page_preference', HOMEPAGE_MY);
-    } else if (!empty($CFG->defaulthomepage) && $CFG->defaulthomepage == HOMEPAGE_USER) {
-        $PAGE->settingsnav->get('usercurrentsettings')->add(get_string('makethismyhome'), new moodle_url('/my/', array('setdefaulthome'=>true)), navigation_node::TYPE_SETTING);
+//if (!isguestuser()) {   // Skip default home page for guests
+    if (get_home_page() != HOMEPAGE_MY) {
+        if (optional_param('setdefaulthome', false, PARAM_BOOL)) {
+            set_user_preference('user_home_page_preference', HOMEPAGE_MY);
+        } else if (!empty($CFG->defaulthomepage) && $CFG->defaulthomepage == HOMEPAGE_USER) {
+            $PAGE->settingsnav->get('usercurrentsettings')->add(get_string('makethismyhome'), new moodle_url('/my/', array('setdefaulthome'=>true)), navigation_node::TYPE_SETTING);
+        }
     }
-}
+//}
 
 // Toggle the editing state and switches
 if ($PAGE->user_allowed_editing()) {

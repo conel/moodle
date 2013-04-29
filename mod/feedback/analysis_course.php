@@ -35,6 +35,7 @@ $searchcourse = optional_param('searchcourse', '', PARAM_RAW);
 $courseid = optional_param('courseid', false, PARAM_INT);
 
 $url = new moodle_url('/mod/feedback/analysis_course.php', array('id'=>$id));
+
 if ($courseid !== false) {
     $url->param('courseid', $courseid);
 }
@@ -52,6 +53,14 @@ if ($searchcourse !== '') {
 }
 $PAGE->set_url($url);
 
+if ($id == 74698) {
+	//print_object($url);
+	$query_string="id=$id&courseid=$courseid&coursefilter=$coursefilter&courseitemfilter=$courseitemfilter&courseitemfiltertyp=$courseitemfiltertyp&searchcourse=$searchcourse";
+	//print $query_string;
+	header('Location: analysis_course_learner_survey_1213.php?'.$query_string);
+	exit;
+}
+    
 if (($searchcourse OR $courseitemfilter OR $coursefilter) AND !confirm_sesskey()) {
     print_error('invalidsesskey');
 }

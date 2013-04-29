@@ -36,6 +36,7 @@
  */
 
 require(dirname(__FILE__) . '/../config.php');
+
 // Redirect to either staff or student my homes
 if (strpos($USER->email, '@student.conel.ac.uk') === false) {
     header('location: staff.php');
@@ -43,6 +44,7 @@ if (strpos($USER->email, '@student.conel.ac.uk') === false) {
     header('location: student.php');
 }
 exit;
+
 require_once($CFG->dirroot . '/my/lib.php');
 
 redirect_if_major_upgrade_required();

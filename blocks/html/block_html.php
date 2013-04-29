@@ -113,7 +113,7 @@ class block_html extends block_base {
         }
         //find out if this block is on the profile page
         if ($context->contextlevel == CONTEXT_USER) {
-            if ($SCRIPT === '/my/index.php') {
+            if ($SCRIPT === '/my/index.php' || $SCRIPT === '/my/staff.php') {
                 // this is exception - page is completely private, nobody else may see content there
                 // that is why we allow JS here
                 return true;
