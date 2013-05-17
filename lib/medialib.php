@@ -809,6 +809,7 @@ class core_media_player_qt extends core_media_player {
 
         $fallback = core_media_player::PLACEHOLDER;
 
+/*
         // Embed code.
         return <<<OET
 <span class="mediaplugin mediaplugin_qt">
@@ -836,6 +837,20 @@ class core_media_player_qt extends core_media_player {
         </object>
         <!--<![endif]-->
     </object>
+</span>
+OET;
+*/
+
+        return <<<OET
+<span class="mediaplugin mediaplugin_qt">       
+<object width=620 height=450 classid="CLSID:22d6f312-b0f6-11d0-94ab-0080c74c7e95" codeBase="http://activex.microsoft.com/activex/controls/mplayer/en/nsm p2inf.cab#Version=5,1,52,701" type="application/x-oleobject" altHtml="<!--[if !IE]>--><object type="video/mpeg" data="https://vle.conel.ac.uk/file.php/20701/M2U00033.MPG"><param name="controller" value="true" /><param name="autostart" value="true" /><param name="src" value="https://vle.conel.ac.uk/file.php/20701/M2U00033.MPG" /><a href="https://vle.conel.ac.uk/file.php/20701/M2U00033.MPG">https://vle.conel.ac.uk/file.php/20701/M2U00033.MPG</a><!--<![endif]--><a href="https://vle.conel.ac.uk/file.php/20701/M2U00033.MPG">https://vle.conel.ac.uk/file.php/20701/M2U00033.MPG</a><!--[if !IE]>--></object><!--<![endif]-->">
+<param name="fileName" value="https://vle.conel.ac.uk/file.php/20701/M2U00033.MPG"/>
+<param name="autoStart" value="true"/>
+<param name="animationatStart" value="true"/>
+<param name="transparentatStart" value="true"/>
+<param name="showControls" value="true"/>
+<param name="Volume" value="-450"/>
+<br />
 </span>
 OET;
     }
