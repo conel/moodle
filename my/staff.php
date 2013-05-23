@@ -209,7 +209,7 @@ if (has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))) 
     <td><a href="http://www.google.co.uk/" target="_blank"><img src="<?php echo $OUTPUT->pix_url('staff/icon-google', 'theme'); ?>" width="128" height="74" alt="Google" /><br />Google</a></td>
     <td><a href="http://www.conel.ac.uk/" target="_blank"><img src="<?php echo $OUTPUT->pix_url('staff/icon-conel', 'theme'); ?>" width="120" height="74" alt="College Website" /><br />College Website</a></td>
     <td><a href="/course/category.php?id=51" target="_blank"><img src="<?php echo $OUTPUT->pix_url('staff/icon-good-teaching', 'theme'); ?>" width="129" height="74" alt="Good Teaching and Learning" /><br />Good Teaching<br /> &amp; Learning</a></td>
-    <td><a href="/course/category.php?id=16" target="_blank"><img src="<?php echo $OUTPUT->pix_url('staff/icon-staff-training2', 'theme'); ?>" width="117" height="74" alt="Staff Training Tutorials" /><br />Staff Training Tutorials</a></td>
+    <td><a href="/course/category.php?id=343" target="_blank"><img src="<?php echo $OUTPUT->pix_url('staff/icon-staff-training2', 'theme'); ?>" width="117" height="74" alt="Staff Training Tutorials" /><br />Staff Training Tutorials</a></td>
     </tr>
 </table>
 
