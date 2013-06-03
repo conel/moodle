@@ -36,7 +36,7 @@
     $title = "Statistics - Monthly Trends";
 
     $navlinks = array();
-    $navlinks[] = array('name' => 'Statistics', 'link' => 'index.php', 'type' => 'misc');
+    //$navlinks[] = array('name' => 'Statistics', 'link' => 'index.php', 'type' => 'misc');
     $navlinks[] = array('name' => 'Monthly Trends', 'link' => 'index.php', 'type' => 'misc');
     $navigation = build_navigation($navlinks);
     $view = optional_param('view', 'stats', PARAM_RAW);
