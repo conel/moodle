@@ -287,6 +287,7 @@
                         $end_date = $_GET['ed'];
                         $stats->generateStats($start_date, $end_date, $stat_type, $filter_course, $filter_category);
                     }
+                    
                     $stats->displayMonthlyStats($days, $stat_type, $filter_course, $filter_category);
                 ?>
                 </td>
