@@ -903,11 +903,19 @@
 					}
 					
 					// nkowald - 2010-09-29 - If a stat is locked (complete [in theory]) then hide it with CSS
+                    /*
                     if ($locked == 0) {
 						$class_html = ($link_type == 'trends') ? ' class="update_link_trends"' : ' class="update_link_comparisons" ';
                     } else {
                         $class_html = ($link_type == 'trends') ? ' class="update_link_trends locked"' : ' class="update_link_comparisons locked" ';
                     }
+					*/
+					
+                    if ($locked == 0) {
+						$class_html = ($link_type == 'trends') ? ' class="update_link_trends"' : ' class="update_link_comparisons" ';
+                    } else {
+                        $class_html = ($link_type == 'trends') ? ' style="display: none"' : ' style="display: none" ';
+                    }                    
 					// nkowald
 				
 					$name_html = ($month == $this_month) ? ' name="current" ' : 'name=""';
