@@ -120,6 +120,7 @@ class gradereportlib_testcase extends advanced_testcase {
         $report = new grade_report_test($course->id, $gpr, $coursecontext, $student);
 
         // Should return the supplied student total grade regardless of hiding.
+<<<<<<< HEAD
         $report->showtotalsifcontainhidden = GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN;
         $this->assertEquals($datagrade + $forumgrade, $report->blank_hidden_total($course->id, $coursegradeitem, $datagrade + $forumgrade));
 
@@ -129,6 +130,17 @@ class gradereportlib_testcase extends advanced_testcase {
 
         // Should return the course total minus the hidden database activity grade.
         $report->showtotalsifcontainhidden = GRADE_REPORT_SHOW_TOTAL_IF_CONTAINS_HIDDEN;
+=======
+        $report->showtotalsifcontainhidden = array($course->id => GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN);
+        $this->assertEquals($datagrade + $forumgrade, $report->blank_hidden_total($course->id, $coursegradeitem, $datagrade + $forumgrade));
+
+        // Should blank the student total as course grade depends on a hidden item.
+        $report->showtotalsifcontainhidden = array($course->id => GRADE_REPORT_HIDE_TOTAL_IF_CONTAINS_HIDDEN);
+        $this->assertEquals(null, $report->blank_hidden_total($course->id, $coursegradeitem, $datagrade + $forumgrade));
+
+        // Should return the course total minus the hidden database activity grade.
+        $report->showtotalsifcontainhidden = array($course->id => GRADE_REPORT_SHOW_TOTAL_IF_CONTAINS_HIDDEN);
+>>>>>>> MOODLE_25_STABLE
         $this->assertEquals($forumgrade, $report->blank_hidden_total($course->id, $coursegradeitem, $datagrade + $forumgrade));
 
         // Note: we cannot simply hide modules and call $report->blank_hidden_total() again.
@@ -182,16 +194,28 @@ class gradereportlib_testcase extends advanced_testcase {
         $report = new grade_report_test($course->id, $gpr, $coursecontext, $student);
 
         // Should return the supplied student total grade regardless of hiding.
+<<<<<<< HEAD
         $report->showtotalsifcontainhidden = GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN;
         $this->assertEquals($datagrade + $forumgrade, $report->blank_hidden_total($course->id, $coursegradeitem, $datagrade + $forumgrade));
 
         // Should blank the student total as course grade depends on a hidden item.
         $report->showtotalsifcontainhidden = GRADE_REPORT_HIDE_TOTAL_IF_CONTAINS_HIDDEN;
+=======
+        $report->showtotalsifcontainhidden = array($course->id => GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN);
+        $this->assertEquals($datagrade + $forumgrade, $report->blank_hidden_total($course->id, $coursegradeitem, $datagrade + $forumgrade));
+
+        // Should blank the student total as course grade depends on a hidden item.
+        $report->showtotalsifcontainhidden = array($course->id => GRADE_REPORT_HIDE_TOTAL_IF_CONTAINS_HIDDEN);
+>>>>>>> MOODLE_25_STABLE
         $this->assertEquals(null, $report->blank_hidden_total($course->id, $coursegradeitem, $datagrade + $forumgrade));
 
         // Should return the course total minus the hidden activity grades.
         // They are both hidden so should return null.
+<<<<<<< HEAD
         $report->showtotalsifcontainhidden = GRADE_REPORT_SHOW_TOTAL_IF_CONTAINS_HIDDEN;
+=======
+        $report->showtotalsifcontainhidden = array($course->id => GRADE_REPORT_SHOW_TOTAL_IF_CONTAINS_HIDDEN);
+>>>>>>> MOODLE_25_STABLE
         $this->assertEquals(null, $report->blank_hidden_total($course->id, $coursegradeitem, $datagrade + $forumgrade));
     }
 }

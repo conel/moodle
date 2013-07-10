@@ -18,7 +18,7 @@
     $section     = optional_param('section', 0, PARAM_INT);
     $move        = optional_param('move', 0, PARAM_INT);
     $marker      = optional_param('marker',-1 , PARAM_INT);
-    $switchrole  = optional_param('switchrole',-1, PARAM_INT);
+    $switchrole  = optional_param('switchrole',-1, PARAM_INT); // Deprecated, use course/switchrole.php instead.
     $modchooser  = optional_param('modchooser', -1, PARAM_BOOL);
     $return      = optional_param('return', 0, PARAM_LOCALURL);
 
@@ -117,14 +117,30 @@
     }
     add_to_log($course->id, 'course', $loglabel, "view.php?". $logparam, $infoid);
 
-    $course->format = clean_param($course->format, PARAM_ALPHA);
-    if (!file_exists($CFG->dirroot.'/course/format/'.$course->format.'/format.php')) {
-        $course->format = 'weeks';  // Default format is weeks
-    }
+    // Fix course format if it is no longer installed
+    $course->format = course_get_format($course)->get_format();
 
     $PAGE->set_pagelayout('course');
     $PAGE->set_pagetype('course-view-' . $course->format);
+    $PAGE->set_other_editing_capability('moodle/course:update');
     $PAGE->set_other_editing_capability('moodle/course:manageactivities');
+    $PAGE->set_other_editing_capability('moodle/course:activityvisibility');
+    if (course_format_uses_sections($course->format)) {
+        $PAGE->set_other_editing_capability('moodle/course:sectionvisibility');
+        $PAGE->set_other_editing_capability('moodle/course:movesections');
+    }
+
+    // Preload course format renderer before output starts.
+    // This is a little hacky but necessary since
+    // format.php is not included until after output starts
+    if (file_exists($CFG->dirroot.'/course/format/'.$course->format.'/renderer.php')) {
+        require_once($CFG->dirroot.'/course/format/'.$course->format.'/renderer.php');
+        if (class_exists('format_'.$course->format.'_renderer')) {
+            // call get_renderer only if renderer is defined in format plugin
+            // otherwise an exception would be thrown
+            $PAGE->get_renderer('format_'. $course->format);
+        }
+    }
 
     if ($reset_user_allowed_editing) {
         // ugly hack
@@ -179,20 +195,17 @@
             }
         }
 
-        if (has_capability('moodle/course:update', $context)) {
-            if (!empty($section)) {
-                if (!empty($move) and has_capability('moodle/course:movesections', $context) and confirm_sesskey()) {
-                    $destsection = $section + $move;
-                    if (move_section_to($course, $section, $destsection)) {
-                        if ($course->id == SITEID) {
-                            redirect($CFG->wwwroot . '/?redirect=0');
-                        } else {
-                            redirect(course_get_url($course));
-                        }
-                    } else {
-                        echo $OUTPUT->notification('An error occurred while moving a section');
-                    }
+        if (!empty($section) && !empty($move) &&
+                has_capability('moodle/course:movesections', $context) && confirm_sesskey()) {
+            $destsection = $section + $move;
+            if (move_section_to($course, $section, $destsection)) {
+                if ($course->id == SITEID) {
+                    redirect($CFG->wwwroot . '/?redirect=0');
+                } else {
+                    redirect(course_get_url($course));
                 }
+            } else {
+                echo $OUTPUT->notification('An error occurred while moving a section');
             }
         }
     } else {
@@ -269,10 +282,6 @@
     echo html_writer::end_tag('div');
 
     // Include course AJAX
-    if (include_course_ajax($course, $modnamesused)) {
-        // Add the module chooser
-        $renderer = $PAGE->get_renderer('core', 'course');
-        echo $renderer->course_modchooser(get_module_metadata($course, $modnames, $displaysection), $course);
-    }
+    include_course_ajax($course, $modnamesused);
 
     echo $OUTPUT->footer();

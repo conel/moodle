@@ -1521,7 +1521,7 @@ class assignment_base {
                             } else if ($quickgrade) {
                                 $comment = '<div id="com'.$auser->id.'">'
                                          . '<textarea tabindex="'.$tabindex++.'" name="submissioncomment['.$auser->id.']" id="submissioncomment'
-                                         . $auser->id.'" rows="2" cols="20">'.($auser->submissioncomment).'</textarea></div>';
+                                         . $auser->id.'" rows="2" cols="20" spellcheck="true">'.($auser->submissioncomment).'</textarea></div>';
                             } else {
                                 $comment = '<div id="com'.$auser->id.'">'.shorten_text(strip_tags($auser->submissioncomment),15).'</div>';
                             }
@@ -1549,7 +1549,7 @@ class assignment_base {
                             } else if ($quickgrade) {
                                 $comment = '<div id="com'.$auser->id.'">'
                                          . '<textarea tabindex="'.$tabindex++.'" name="submissioncomment['.$auser->id.']" id="submissioncomment'
-                                         . $auser->id.'" rows="2" cols="20">'.($auser->submissioncomment).'</textarea></div>';
+                                         . $auser->id.'" rows="2" cols="20" spellcheck="true">'.($auser->submissioncomment).'</textarea></div>';
                             } else {
                                 $comment = '<div id="com'.$auser->id.'">&nbsp;</div>';
                             }
@@ -3574,12 +3574,16 @@ function assignment_get_all_submissions($assignment, $sort="", $dir="DESC") {
     if ($assignment->course == SITEID) {
         $select = '';
     }*/
-
+    $cm = get_coursemodule_from_instance('assignment', $assignment->id, $assignment->course);
+    $context = context_module::instance($cm->id);
+    list($enroledsql, $params) = get_enrolled_sql($context, 'mod/assignment:submit');
+    $params['assignmentid'] = $assignment->id;
     return $DB->get_records_sql("SELECT a.*
-                                   FROM {assignment_submissions} a, {user} u
+                                    FROM {assignment_submissions} a
+                                    INNER JOIN (". $enroledsql .") u ON u.id = a.userid
                                   WHERE u.id = a.userid
-                                        AND a.assignment = ?
-                               ORDER BY $sort", array($assignment->id));
+                                        AND a.assignment = :assignmentid
+                                  ORDER BY $sort", $params);
 
 }
 
@@ -3816,8 +3820,8 @@ function assignment_get_types() {
     }
 
     /// Drop-in extra assignment types
-    $assignmenttypes = get_list_of_plugins('mod/assignment/type');
-    foreach ($assignmenttypes as $assignmenttype) {
+    $assignmenttypes = get_plugin_list('assignment');
+    foreach ($assignmenttypes as $assignmenttype=>$fulldir) {
         if (!empty($CFG->{'assignment_hide_'.$assignmenttype})) {  // Not wanted
             continue;
         }

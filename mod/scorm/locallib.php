@@ -834,7 +834,7 @@ function scorm_course_format_display($user, $course) {
 }
 
 function scorm_view_display ($user, $scorm, $action, $cm) {
-    global $CFG, $DB, $PAGE, $OUTPUT;
+    global $CFG, $DB, $PAGE, $OUTPUT, $COURSE;
 
     if ($scorm->scormtype != SCORM_TYPE_LOCAL && $scorm->updatefreq == SCORM_UPDATE_EVERYTIME) {
         scorm_parse($scorm, false);
@@ -913,7 +913,7 @@ function scorm_view_display ($user, $scorm, $action, $cm) {
                       <label for="a"><?php print_string('newattempt', 'scorm') ?></label>
             <?php
         }
-        if (!empty($scorm->popup)) {
+        if ($COURSE->format != 'scorm' && !empty($scorm->popup)) {
             echo '<input type="hidden" name="display" value="popup" />'."\n";
         }
         ?>
@@ -1580,7 +1580,8 @@ function scorm_format_toc_for_treeview($user, $scorm, $scoes, $usertracks, $cmid
     $result->incomplete = true;
 
     if (!$children) {
-        $result->attemptleft = $scorm->maxattempt == 0 ? 1 : $scorm->maxattempt - $attempt;
+        $attemptsmade = scorm_get_attempt_count($user->id, $scorm);
+        $result->attemptleft = $scorm->maxattempt == 0 ? 1 : $scorm->maxattempt - $attemptsmade;
     }
 
     if (!$children) {
@@ -1624,13 +1625,21 @@ function scorm_format_toc_for_treeview($user, $scorm, $scoes, $usertracks, $cmid
                         }
                     } else if ($toclink == TOCFULLURL) {
                         $url = $CFG->wwwroot.'/mod/scorm/player.php?'.$sco->url;
-                        if ($sco->scormtype == 'sco') {
-                            $result->toc .= $sco->statusicon.'&nbsp;<a href="'.$url.'">'.format_string($sco->title).'</a>'.$score."\n";
+                        if (!empty($sco->launch)) {
+                            if ($sco->scormtype == 'sco') {
+                                $result->toc .= $sco->statusicon.'&nbsp;<a href="'.$url.'">'.format_string($sco->title).'</a>'.$score."\n";
+                            } else {
+                                $result->toc .= '&nbsp;<a href="'.$url.'">'.format_string($sco->title).'</a>'.$score."\n";
+                            }
                         } else {
-                            $result->toc .= '&nbsp;<a href="'.$url.'">'.format_string($sco->title).'</a>'.$score."\n";
+                            if ($sco->scormtype == 'sco') {
+                                $result->toc .= $sco->statusicon.'&nbsp;'.format_string($sco->title).$score."\n";
+                            } else {
+                                $result->toc .= '&nbsp;'.format_string($sco->title).$score."\n";
+                            }
                         }
                     } else {
-                        if ($sco->launch) {
+                        if (!empty($sco->launch)) {
                             if ($sco->scormtype == 'sco') {
                                 $result->toc .= '<a title="'.$sco->url.'">'.$sco->statusicon.'&nbsp;'.format_string($sco->title).'&nbsp;'.$score.'</a>';
                             } else {
@@ -1772,7 +1781,7 @@ function scorm_get_toc($user, $scorm, $cmid, $toclink=TOCJSLINK, $currentorg='',
     }
 
     if (empty($scoid)) {
-        $result->sco = $scoes['scoes'][0]->children;
+        $result->sco = $scoes['scoes'][0]->children[0];
     } else {
         $result->sco = scorm_get_sco($scoid);
     }

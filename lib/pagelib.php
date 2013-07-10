@@ -51,7 +51,8 @@ defined('MOODLE_INTERNAL') || die();
  *      the forum or quiz table) that this page belongs to. Will be null
  *      if this page is not within a module.
  * @property-read array $alternativeversions Mime type => object with ->url and ->title.
- * @property-read blocks_manager $blocks The blocks manager object for this page.
+ * @property-read block_manager $blocks The blocks manager object for this page.
+ * @property-read array $blockmanipulations
  * @property-read string $bodyclasses A string to use within the class attribute on the body tag.
  * @property-read string $bodyid A string to use as the id of the body tag.
  * @property-read string $button The HTML to go where the Turn editing on button normally goes.
@@ -638,6 +639,22 @@ class moodle_page {
     }
 
     /**
+     * Returns an array of minipulations or false if there are none to make.
+     *
+     * @since 2.5.1 2.6
+     * @return bool|array
+     */
+    protected function magic_get_blockmanipulations() {
+        if (!right_to_left()) {
+            return false;
+        }
+        if (is_null($this->_theme)) {
+            $this->initialise_theme_and_output();
+        }
+        return $this->_theme->blockrtlmanipulations;
+    }
+
+    /**
      * Please do not call this method directly, use the ->devicetypeinuse syntax. {@link moodle_page::__get()}.
      * @return string The device type being used.
      */
@@ -871,7 +888,11 @@ class moodle_page {
         // notify course format that this page is set for the course
         if ($this->_course->id != $SITE->id) {
             require_once($CFG->dirroot.'/course/lib.php');
-            course_get_format($this->_course)->page_set_course($this);
+            $courseformat = course_get_format($this->_course);
+            $this->add_body_class('format-'. $courseformat->get_format());
+            $courseformat->page_set_course($this);
+        } else {
+            $this->add_body_class('format-site');
         }
     }
 
@@ -1290,6 +1311,18 @@ class moodle_page {
     public function force_theme($themename) {
         $this->ensure_theme_not_set();
         $this->_theme = theme_config::load($themename);
+    }
+
+    /**
+     * Reload theme settings.
+     *
+     * This is used when we need to reset settings
+     * because they are now double cached in theme.
+     */
+    public function reload_theme() {
+        if (!is_null($this->_theme)) {
+            $this->_theme = theme_config::load($this->_theme->name);
+        }
     }
 
     /**
@@ -1808,5 +1841,26 @@ class moodle_page {
      */
     public function set_popup_notification_allowed($allowed) {
         $this->_popup_notification_allowed = $allowed;
+    }
+
+    /**
+     * Returns the block region having made any required theme manipulations.
+     *
+     * @since 2.5.1 2.6
+     * @param string $region
+     * @return string
+     */
+    public function apply_theme_region_manipulations($region) {
+        if ($this->blockmanipulations && isset($this->blockmanipulations[$region])) {
+            $regionwas = $region;
+            $regionnow = $this->blockmanipulations[$region];
+            if ($this->blocks->is_known_region($regionwas) && $this->blocks->is_known_region($regionnow)) {
+                // Both the before and after regions are known so we can swap them over.
+                return $regionnow;
+            }
+            // We didn't know about both, we won't swap them over.
+            return $regionwas;
+        }
+        return $region;
     }
 }

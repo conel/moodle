@@ -35,6 +35,11 @@ require_once("$CFG->libdir/pluginlib.php");
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class plugininfo_tinymce extends plugininfo_base {
+
+    public function is_uninstall_allowed() {
+        return true;
+    }
+
     public function get_uninstall_url() {
         return new moodle_url('/lib/editor/tinymce/subplugins.php', array('delete' => $this->name, 'sesskey' => sesskey()));
     }
@@ -244,5 +249,32 @@ class tiynce_subplugins_settings extends admin_setting {
         $return .= html_writer::tag('p', get_string('tablenosave', 'admin'));
         $return .= $OUTPUT->box_end();
         return highlight($query, $return);
+    }
+}
+
+class editor_tinymce_json_setting_textarea extends admin_setting_configtextarea {
+    /**
+     * Returns an XHTML string for the editor
+     *
+     * @param string $data
+     * @param string $query
+     * @return string XHTML string for the editor
+     */
+    public function output_html($data, $query='') {
+        $result = parent::output_html($data, $query);
+
+        $data = trim($data);
+        if ($data) {
+            $decoded = json_decode($data, true);
+            // Note: it is not very nice to abuse these file classes, but anyway...
+            if (is_array($decoded)) {
+                $valid = '<span class="pathok">&#x2714;</span>';
+            } else {
+                $valid = '<span class="patherror">&#x2718;</span>';
+            }
+            $result = str_replace('</textarea>', '</textarea>'.$valid, $result);
+        }
+
+        return $result;
     }
 }

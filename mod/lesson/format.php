@@ -283,7 +283,7 @@ function lesson_save_question_options($question, $lesson) {
 class qformat_default {
 
     var $displayerrors = true;
-    var $category = NULL;
+    var $category = null;
     var $questionids = array();
     var $qtypeconvert = array('numerical'   => LESSON_PAGE_NUMERICAL,
                                'multichoice' => LESSON_PAGE_MULTICHOICE,
@@ -503,14 +503,14 @@ class qformat_default {
     }
 
 
-    function readquestion($lines) {
+    protected function readquestion($lines) {
     /// Given an array of lines known to define a question in
     /// this format, this function converts it into a question
     /// object suitable for processing and insertion into Moodle.
 
         echo "<p>This flash question format has not yet been completed!</p>";
 
-        return NULL;
+        return null;
     }
 
     /**
