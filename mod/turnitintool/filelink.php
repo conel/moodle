@@ -1,7 +1,7 @@
 <?php
 /**
  * @package   turnitintool
- * @copyright 2010 iParadigms LLC
+ * @copyright 2012 Turnitin
  */
 
 require_once("../../config.php");
@@ -79,7 +79,7 @@ if (!is_null($param_sub)) {
 
     if ($tii->getRerror()) {
         if (!$tii->getAPIunavailable()) {
-            $reason=($tii->getRcode()==DB_UNIQUEID_ERROR) ? get_string('assignmentdoesnotexist','turnitintool') : $tii->getRmessage();
+            $reason=($tii->getRcode()==TURNITINTOOL_DB_UNIQUEID_ERROR) ? get_string('assignmentdoesnotexist','turnitintool') : $tii->getRmessage();
         } else {
             $reason=get_string('apiunavailable','turnitintool');
         }
