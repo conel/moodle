@@ -30,3 +30,11 @@ phpunit.xml
 composer.phar
 composer.lock
 /vendor/
+filter/poodll/
+blocks/formal_langs/*
+question/behaviour/adaptivehints/*
+question/behaviour/adaptivehintsnopenalties/*
+question/type/ddimageortext/*
+question/type/ddmarker/*
+question/type/gapselect/*
+question/type/poasquestion/*
