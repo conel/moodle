@@ -56,7 +56,7 @@
     $time_select = $stats->generateTimeSelect();
 
 ?>
-<div id="content">
+<div id="content" style="overflow: auto">
     <table id="layout-table" summary="layout">
         <tbody>
             <tr>
