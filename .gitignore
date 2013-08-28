@@ -35,3 +35,7 @@ composer.lock
 /lib/yuilib/*/build/*/*-coverage.js
 /report/stats/*
 group/index.php
+blocks
+filter
+question
+mod/hotpot/*

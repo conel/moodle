@@ -2193,5 +2193,11 @@ class auth_plugin_ldap extends auth_plugin_base {
         }
         return false;
     }
-
+	
+	// this prevents the user to be log back in when he logs out in case sso /single sign on/ is enabled
+	function logoutpage_hook() {
+		global $USER, $CFG, $redirect, $DB;
+		$redirect = get_login_url().'?authldap_skipntlmsso=1';
+	}
+ 
 } // End of the class
