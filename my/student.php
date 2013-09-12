@@ -171,7 +171,52 @@ echo $OUTPUT->header();
 
 ?>
 
-<iframe src="http://ldmis-app/ProPortal" style="width:100%;height:1400px"></iframe>	
+<h2>News</h2>
+
+<?php if ($banners_exist === true) { ?>
+
+<div class="container">
+    <div class="wt-rotator">
+        <div class="screen"><noscript><img src="<?php echo $banners_found[0]['img_url']; ?>" alt="" /></noscript></div>
+        <div class="c-panel">
+            <div class="buttons"><div class="prev-btn"></div><div class="play-btn"></div><div class="next-btn"></div></div>
+            <div class="thumbnails">
+                <ul>
+                <?php foreach ($banners_found as $ban) {
+                    echo '<li><a href="'.$ban['img_url'].'"><img src="'.$ban['img_url'].'" alt="Banner" width="495" height="185" /></a><a href="'.$ban['link'].'"></a></li>' . PHP_EOL;
+                } ?>
+                </ul>
+            </div>     
+        </div><!-- // c-panel -->
+    </div><!-- // wt-rotator -->
+</div><!-- // container -->
+
+<?php 
+} else {
+    echo '<p>No banners have been added yet.</p>';
+}
+if (has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))) {
+    echo '<p style="text-align:right;"><a href="/theme/conel/banners/index.php?audience=2">Edit '.$audience_name.' Banners</a></p>';
+}
+?>
+
+<h2>Student Links</h2>
+<table id="staff_links" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td><a href="https://vle.conel.ac.uk/course/view.php?id=3817" target="_blank"><img src="<?php echo $OUTPUT->pix_url('student/button-2-careers', 'theme'); ?>" width="116" height="106" alt="Careers" /><br />Careers</a></td>
+<td><a href="https://vle.conel.ac.uk/course/view.php?id=3818" target="_blank"><img src="<?php echo $OUTPUT->pix_url('student/button-3-elearning-support', 'theme'); ?>" width="123" height="106" alt="E-Learning & ICT Support" /><br />E-Learning<br>& ICT Support</a></td>
+<td><a href="https://vle.conel.ac.uk/course/view.php?id=3819" target="_blank"><img src="<?php echo $OUTPUT->pix_url('student/4-esafety', 'theme'); ?>" width="115" height="106" alt="E-safety" /><br />E-safety</a></td>
+</tr>
+<tr>
+<td><a href="https://vle.conel.ac.uk/course/view.php?id=3821" target="_blank"><img src="<?php echo $OUTPUT->pix_url('student/6-learner-support', 'theme'); ?>" width="116" height="93" alt="Learner Support" /><br />Learner Support</a></td>
+<td><a href="https://vle.conel.ac.uk/course/view.php?id=985"" target="_blank"><img src="<?php echo $OUTPUT->pix_url('student/7-mentoring', 'theme'); ?>" width="123" height="93" alt="Mentoring" /><br />Mentoring</a></td>
+<td><a href="https://vle.conel.ac.uk/course/view.php?id=3837"" target="_blank"><img src="<?php echo $OUTPUT->pix_url('student/12-welfare', 'theme'); ?>" width="123" height="93" alt="Welfare" /><br />Welfare</a></td>
+</tr>
+</table>
+
+<!--iframe src="http://ldmis-app/ProPortal" style="width:100%;height:1400px"></iframe-->	
+ 
+<br />
 
 <?php
 			
